@@ -35,21 +35,14 @@ ZhenguanEdict 不是模仿 Edict 做一个朝代，而是把**整个官制进化
 
 ## 架构示意
 
-```
-User / Dashboard (单文件 HTML + Vanilla JS)
-        │  朝代切换 · 创建任务 · 查看奏折
-        ▼
-┌─────────────────────────────┐
-│       Dynasty Engine         │
-│  拓扑加载 · 路由调度 · 状态机 │
-│  Agent 管理 · 奏折归档       │
-└──────────┬──────────────────┘
-           │ HTTP (OpenAI 兼容)
-┌──────────▼──────────────────┐
-│    llama.cpp (Router Mode)   │
-│  规划型 · 编码型 · 审查型    │
-│  文档型 · 轻量型              │
-└─────────────────────────────┘
+```mermaid
+graph TB
+    U["User / Dashboard (单文件 HTML + Vanilla JS)"]
+    E["Dynasty Engine<br/>拓扑加载 · 路由调度 · 状态机<br/>Agent 管理 · 奏折归档"]
+    L["llama.cpp (Router Mode)<br/>规划型 · 编码型 · 审查型<br/>文档型 · 轻量型"]
+
+    U -->|"朝代切换 · 创建任务 · 查看奏折"| E
+    E -->|"HTTP (OpenAI 兼容)"| L
 ```
 
 ---
