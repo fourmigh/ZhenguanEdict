@@ -17,6 +17,8 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pathlib import Path
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
@@ -24,7 +26,7 @@ from zhenguan_edict.engine.agent_scheduler import AgentScheduler
 from zhenguan_edict.engine.routing_engine import RoutingEngine
 from zhenguan_edict.engine.task_state_machine import TaskStateMachine
 from zhenguan_edict.engine.topology_loader import TopologyLoader
-from zhenguan_edict.interfaces.dynasty import DynastyTopology
+from zhenguan_edict.interfaces.dynasty import ColorScheme, DynastyTopology, RoleDefinition
 from zhenguan_edict.interfaces.memorial import MemorialEntry
 from zhenguan_edict.interfaces.task import TaskState
 from zhenguan_edict.loops.memory import MemoryManager
@@ -301,6 +303,14 @@ def _get_engine() -> EngineServer:
     return app.state.engine
 
 
+# ── 前端 ──
+
+@app.get("/")
+async def serve_frontend():
+    html_path = Path(__file__).resolve().parent.parent.parent / "index.html"
+    return FileResponse(html_path)
+
+
 # ── 健康检查 ──
 
 @app.get("/api/health")
@@ -327,6 +337,8 @@ async def list_dynasties():
             "name": t.name,
             "display_name": t.display_name,
             "description": t.description,
+            "edict_name": getattr(t, "edict_name", "敕"),
+            "color_scheme": _color_scheme_dict(getattr(t, "color_scheme", ColorScheme())),
             "roles_count": len(t.roles),
             "roles": [
                 {
@@ -342,6 +354,20 @@ async def list_dynasties():
     ]
 
 
+def _color_scheme_dict(cs: ColorScheme) -> dict:
+    return {
+        "accent": cs.accent,
+        "accent_dim": cs.accent_dim,
+        "bg": cs.bg,
+        "bg2": cs.bg2,
+        "bg3": cs.bg3,
+        "border": cs.border,
+        "text": cs.text,
+        "text_dim": cs.text_dim,
+        "text_muted": cs.text_muted,
+    }
+
+
 @app.get("/api/dynasties/current")
 async def current_dynasty():
     engine = _get_engine()
@@ -352,6 +378,8 @@ async def current_dynasty():
         "name": topo.name,
         "display_name": topo.display_name,
         "description": topo.description,
+        "edict_name": getattr(topo, "edict_name", "敕"),
+        "color_scheme": _color_scheme_dict(getattr(topo, "color_scheme", ColorScheme())),
         "roles": [
             {
                 "role_id": r.role_id,
@@ -389,7 +417,13 @@ async def switch_dynasty(req: SwitchDynastyRequest):
     topo = engine.switch_dynasty(req.name)
     if topo is None:
         raise HTTPException(404, f"Unknown dynasty: {req.name}")
-    return {"status": "switched", "dynasty": topo.name, "display_name": topo.display_name}
+    return {
+        "status": "switched",
+        "dynasty": topo.name,
+        "display_name": topo.display_name,
+        "edict_name": getattr(topo, "edict_name", "敕"),
+        "color_scheme": _color_scheme_dict(getattr(topo, "color_scheme", ColorScheme())),
+    }
 
 
 # ── 任务管理 ──

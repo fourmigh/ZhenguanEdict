@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from zhenguan_edict.interfaces.dynasty import CommunicationMatrix, RoleDefinition, StateTransition
+from zhenguan_edict.interfaces.dynasty import ColorScheme, CommunicationMatrix, RoleDefinition, StateTransition
 from zhenguan_edict.topologies.base import BaseDynastyTopology
 
 
@@ -8,6 +8,8 @@ class MingTopology(BaseDynastyTopology):
     name = "ming"
     display_name = "明 · Ming"
     description = "双轨制：正式通道（内阁票拟→批红）+ 影子通道（司礼监会签与厂卫暗访）。"
+    edict_name = "谕"
+    color_scheme = ColorScheme(accent="#DC3023", accent_dim="#A02010", bg="#1a0804", bg2="#26100a", bg3="#341a12", border="#482618")
 
     roles: Dict[str, RoleDefinition] = {
         "emperor": RoleDefinition(

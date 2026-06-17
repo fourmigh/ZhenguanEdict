@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from zhenguan_edict.interfaces.dynasty import CommunicationMatrix, RoleDefinition, StateTransition
+from zhenguan_edict.interfaces.dynasty import ColorScheme, CommunicationMatrix, RoleDefinition, StateTransition
 from zhenguan_edict.topologies.base import BaseDynastyTopology
 
 
@@ -8,6 +8,8 @@ class SuiTangTopology(BaseDynastyTopology):
     name = "suitang"
     display_name = "隋唐 · Sui-Tang"
     description = "三省六部——延续千年的成熟治理。制定者-检查者闭环带封驳驳回权。"
+    edict_name = "敕"
+    color_scheme = ColorScheme(accent="#C9A84C", accent_dim="#8B7332", bg="#1a0e02", bg2="#24180e", bg3="#34281c", border="#4a3a28")
 
     roles: Dict[str, RoleDefinition] = {
         "emperor": RoleDefinition(

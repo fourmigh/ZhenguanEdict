@@ -36,6 +36,19 @@ class StateMachineConfig:
 
 
 @dataclass
+class ColorScheme:
+    accent: str = "#C9A84C"
+    accent_dim: str = "#8B7332"
+    bg: str = "#0f0c08"
+    bg2: str = "#1a1410"
+    bg3: str = "#2a221c"
+    border: str = "#3a322c"
+    text: str = "#e8ddd0"
+    text_dim: str = "#9a8a7a"
+    text_muted: str = "#6a5a4a"
+
+
+@dataclass
 class RoleDefinition:
     role_id: str
     display_name: str

@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from zhenguan_edict.interfaces.dynasty import CommunicationMatrix, RoleDefinition, StateTransition
+from zhenguan_edict.interfaces.dynasty import ColorScheme, CommunicationMatrix, RoleDefinition, StateTransition
 from zhenguan_edict.topologies.base import BaseDynastyTopology
 
 
@@ -8,6 +8,8 @@ class SongTopology(BaseDynastyTopology):
     name = "song"
     display_name = "宋 · Song"
     description = "权力分散，多条并行审核路径。Agent 冗余——关键任务多方独立验证。"
+    edict_name = "制"
+    color_scheme = ColorScheme(accent="#A82222", accent_dim="#6B1010", bg="#180606", bg2="#220e0a", bg3="#301812", border="#401e16")
 
     roles: Dict[str, RoleDefinition] = {
         "emperor": RoleDefinition(

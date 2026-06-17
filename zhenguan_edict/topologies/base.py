@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Set
 
 from zhenguan_edict.interfaces.dynasty import (
+    ColorScheme,
     CommunicationMatrix,
     DynastyTopology,
     RoleDefinition,
@@ -14,6 +15,8 @@ class BaseDynastyTopology(DynastyTopology):
     name = "base"
     display_name = "Base"
     description = ""
+    edict_name: str = "敕"
+    color_scheme: ColorScheme = ColorScheme()
     roles: Dict[str, RoleDefinition] = {}
     communication_rules: List[CommunicationMatrix] = []
     state_machine_config: StateMachineConfig = StateMachineConfig(
