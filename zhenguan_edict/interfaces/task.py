@@ -46,11 +46,6 @@ class Task(ABC):
 
     @property
     @abstractmethod
-    def priority(self) -> int:
-        ...
-
-    @property
-    @abstractmethod
     def metadata(self) -> Dict[str, Any]:
         ...
 

@@ -12,7 +12,6 @@ class TaskModel:
     content: str
     state: TaskState
     dynasty: str
-    priority: int = 0
     assigned_role: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)

@@ -45,9 +45,7 @@ class SwitchDynastyRequest(BaseModel):
 
 
 class CreateTaskRequest(BaseModel):
-    title: str
-    content: str = ""
-    priority: int = 0
+    content: str
 
 
 class TransitionRequest(BaseModel):
@@ -90,6 +88,7 @@ class EngineServer:
         self._running = False
         self._task_counter = 0
         self._memorial_counter = 0
+        self._auto_task: Optional[asyncio.Task] = None
 
     # ═══ 朝代管理 ═══
 
@@ -109,7 +108,8 @@ class EngineServer:
 
     # ═══ 任务管理 ═══
 
-    def create_task(self, title: str, content: str, priority: int = 0) -> TaskModel:
+    async def create_task(self, content: str) -> TaskModel:
+        title = await self._generate_title(content)
         self._task_counter += 1
         now = datetime.now(timezone.utc)
         dynasty = self.active_topology.name if self.active_topology else "unknown"
@@ -119,7 +119,6 @@ class EngineServer:
             content=content,
             state=TaskState.NEW,
             dynasty=dynasty,
-            priority=priority,
             created_at=now,
             updated_at=now,
             history=[{
@@ -139,6 +138,28 @@ class EngineServer:
         self.memorials[memorial.memorial_id] = memorial
         self._broadcast_sse({"type": "task_created", "task_id": task.task_id})
         return task
+
+    async def _generate_title(self, content: str) -> str:
+        MAX_LEN = 30
+        topo = self.active_topology
+        if topo is None:
+            return content[:MAX_LEN]
+        planner_role = next(
+            (r for r in topo.roles.values() if r.model_type == "planner"),
+            None
+        )
+        if planner_role is None:
+            return content[:MAX_LEN]
+        agent = next(
+            (a for a in self.agents.values() if a.role_id == planner_role.role_id),
+            None
+        )
+        if agent is None:
+            return content[:MAX_LEN]
+        # TODO: 接入真实 LLM 后调用 agent.process(task) 生成标题
+        # msg = await agent.process(task)
+        # return msg.content[:MAX_LEN]
+        return content[:MAX_LEN]
 
     def get_task(self, task_id: str) -> Optional[TaskModel]:
         return self.tasks.get(task_id)
@@ -274,12 +295,62 @@ class EngineServer:
 
     # ═══ 生命周期 ═══
 
+    async def _auto_process_loop(self) -> None:
+        """背景循环：自动将 new 任务分派给对应朝代 planner agent 并推进状态。"""
+        while self._running:
+            TERMINAL = {TaskState.COMPLETED, TaskState.REJECTED, TaskState.CANCELLED}
+            for task in list(self.tasks.values()):
+                if task.state in TERMINAL:
+                    continue
+                allowed = self.state_machine.allowed_transitions(task.state)
+                if not allowed:
+                    continue
+                topo = self.active_topology
+                if topo is None:
+                    continue
+                planner = next(
+                    (r for r in topo.roles.values() if r.model_type == "planner"),
+                    None
+                )
+                if planner is None:
+                    continue
+                agent = next(
+                    (a for a in self.agents.values() if a.role_id == planner.role_id),
+                    None
+                )
+                if agent is None:
+                    continue
+                agent.is_busy = True
+                agent.current_task_id = task.task_id
+                # TODO: 接入真实 LLM 后 await agent.process(task)
+                await asyncio.sleep(0)  # yield control
+                allowed = self.state_machine.allowed_transitions(task.state)
+                if allowed:
+                    try:
+                        await self.transition_task(
+                            task.task_id, allowed[0].value,
+                            f"auto-dispatch by {agent.display_name}"
+                        )
+                        agent.tasks_completed += 1
+                    except Exception as e:
+                        logger.warning("auto-dispatch failed for %s: %s", task.task_id, e)
+                agent.is_busy = False
+                agent.current_task_id = None
+            await asyncio.sleep(2)
+
     async def start(self) -> None:
         self._running = True
+        self._auto_task = asyncio.create_task(self._auto_process_loop())
         logger.info("ZhenguanEdict Engine started")
 
     async def stop(self) -> None:
         self._running = False
+        if self._auto_task:
+            self._auto_task.cancel()
+            try:
+                await self._auto_task
+            except asyncio.CancelledError:
+                pass
         self.worktree_manager.destroy_all()
         logger.info("ZhenguanEdict Engine stopped")
 
@@ -460,7 +531,6 @@ async def list_tasks(
             "content": t.content,
             "state": t.state.value,
             "dynasty": t.dynasty,
-            "priority": t.priority,
             "assigned_role": t.assigned_role,
             "created_at": t.created_at.isoformat(),
             "updated_at": t.updated_at.isoformat(),
@@ -473,7 +543,9 @@ async def list_tasks(
 @app.post("/api/tasks")
 async def create_task(req: CreateTaskRequest):
     engine = _get_engine()
-    task = engine.create_task(req.title, req.content, req.priority)
+    if not req.content.strip():
+        raise HTTPException(400, "content is required")
+    task = await engine.create_task(req.content)
     return {
         "task_id": task.task_id,
         "title": task.title,
@@ -495,7 +567,6 @@ async def get_task(task_id: str):
         "content": task.content,
         "state": task.state.value,
         "dynasty": task.dynasty,
-        "priority": task.priority,
         "assigned_role": task.assigned_role,
         "created_at": task.created_at.isoformat(),
         "updated_at": task.updated_at.isoformat(),

@@ -89,13 +89,21 @@ a { color: var(--accent); text-decoration: none; }
   border: 2px solid var(--border);
 }
 /* Kanban */
-.kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; min-height: 200px; }
+.kanban { display: flex; padding-bottom: 8px; min-height: 200px; overflow-x: auto; }
 .kanban-col {
-  min-width: 200px; max-width: 260px; flex: 1;
-  background: var(--bg2); border-radius: var(--radius); padding: 8px;
-  border: 1px solid var(--border);
+  flex: 1 1 0; min-width: 0; position: relative;
+  background: var(--bg2); padding: 8px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
-.kanban-col-header { font-size: 11px; font-weight: 600; color: var(--text-dim); padding: 4px 8px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.kanban-col:first-child { border-left: 1px solid var(--border); border-radius: var(--radius) 0 0 var(--radius); }
+.kanban-col:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; }
+.kanban-col + .kanban-col { border-left: none; }
+.kanban-col + .kanban-col::before {
+  content: '→'; position: absolute; left: -11px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 14px; z-index: 1;
+}
+.kanban-col-header { font-size: 11px; font-weight: 600; color: var(--text-dim); padding: 4px 8px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 .kanban-card {
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px;
   padding: 8px 10px; margin-bottom: 6px; cursor: pointer; transition: all .15s;
@@ -286,12 +294,8 @@ a { color: var(--accent); text-decoration: none; }
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modalTask')">&times;</button>
     <div class="modal-title" data-lang="modal_create_task">创建新任务</div>
-    <label data-lang="form_title">标题</label>
-    <input id="taskTitle" placeholder="">
     <label data-lang="form_content">内容</label>
-    <textarea id="taskContent"></textarea>
-    <label data-lang="form_priority">优先级</label>
-    <input id="taskPriority" type="number" value="0" min="0">
+    <textarea id="taskContent" placeholder="" style="min-height:120px"></textarea>
     <div class="btn-row">
       <button class="btn" onclick="closeModal('modalTask')" data-lang="cancel">取消</button>
       <button class="btn btn-primary" onclick="submitCreateTask()" data-lang="confirm">确认</button>
@@ -335,7 +339,7 @@ const STR = {
     new_task:'新建任务',cancel:'取消',confirm:'确认',
     modal_create_task:'创建新任务',modal_transition:'推进状态',
     modal_memorial:'奏折详情',
-    form_title:'标题',form_content:'内容',form_priority:'优先级',
+    form_content:'内容',
     form_target_state:'目标状态',form_reason:'原因',form_role:'角色 ID',
     form_model_type:'模型类型',form_display_name:'显示名称',
     filter_all:'全部状态',filter_all_dynasty:'全部朝代',
@@ -354,8 +358,8 @@ const STR = {
     title_agents:'Agent Overview',new_task:'New Task',
     cancel:'Cancel',confirm:'Confirm',modal_create_task:'Create Task',
     modal_transition:'Transition State',modal_memorial:'Memorial Detail',
-    form_title:'Title',form_content:'Content',
-    form_priority:'Priority',form_target_state:'Target State',form_reason:'Reason',
+    form_content:'Content',
+    form_target_state:'Target State',form_reason:'Reason',
     form_role:'Role ID',form_model_type:'Model Type',form_display_name:'Display Name',
     filter_all:'All States',filter_all_dynasty:'All Dynasties',
     footer_status:'Engine Status',empty_tasks:'No tasks',empty_memorials:'No memorials',
@@ -531,25 +535,24 @@ async function loadTasks() {
       <div class="kanban-col-header">${st} (${items.length})</div>
       ${items.length ? items.map(t => `<div class="kanban-card" onclick="openTransition('${t.task_id}')">
         <div class="kc-title">${t.title}</div>
-        <div class="kc-meta">${fmtTime(t.created_at)} ${t.priority>0?'#'+t.priority:''}</div>
+        <div class="kc-meta">${fmtTime(t.created_at)}</div>
       </div>`).join('') : '<div class="empty-state" style="padding:12px;font-size:11px">-</div>'}
     </div>`;
   }).join('');
 }
 
 function openCreateTask() {
-  document.getElementById('taskTitle').value = '';
   document.getElementById('taskContent').value = '';
-  document.getElementById('taskPriority').value = '0';
   openModal('modalTask');
 }
 
 async function submitCreateTask() {
-  const title = document.getElementById('taskTitle').value.trim();
-  if (!title) return;
-  const r = await api('POST','/api/tasks',{title,content:document.getElementById('taskContent').value,priority:+document.getElementById('taskPriority').value});
+  const content = document.getElementById('taskContent').value.trim();
+  if (!content) return;
+  const r = await api('POST','/api/tasks',{content});
   closeModal('modalTask');
-  toast(t('toast_created') + ': ' + r.task_id);
+  document.getElementById('taskContent').value = '';
+  toast(t('toast_created') + ': ' + r.title);
   loadTasks(); loadStatus();
 }
 
