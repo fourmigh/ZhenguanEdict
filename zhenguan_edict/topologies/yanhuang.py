@@ -18,6 +18,7 @@ class YanHuangTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="农耕与规划：资源评估、策略制定",
+            representative="神农氏",
             can_review=True,
         ),
         "huangdi": RoleDefinition(
@@ -26,6 +27,7 @@ class YanHuangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="征伐与执行：策略实施、行动协调",
+            representative="轩辕氏",
             can_execute=True,
         ),
     }

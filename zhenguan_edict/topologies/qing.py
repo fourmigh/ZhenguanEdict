@@ -18,6 +18,7 @@ class QingTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="入口：选择紧急或标准通道",
+            representative="康熙帝",
         ),
         "grand_council": RoleDefinition(
             role_id="grand_council",
@@ -25,6 +26,7 @@ class QingTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="紧急决策，绕过正常流程",
+            representative="张廷玉",
         ),
         "six_ministries": RoleDefinition(
             role_id="six_ministries",
@@ -32,6 +34,7 @@ class QingTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="标准领域执行（户/礼/兵/刑/工/吏）",
+            representative="刘统勋",
             can_execute=True,
             can_review=True,
         ),
@@ -41,6 +44,7 @@ class QingTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="documenter",
             description="非汉民族事务，专门领域",
+            representative="年羹尧",
             can_execute=True,
         ),
         "imperial_household": RoleDefinition(
@@ -49,6 +53,7 @@ class QingTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="lite",
             description="皇室内部事务，独立于民政",
+            representative="曹寅",
             can_execute=True,
         ),
     }

@@ -18,6 +18,7 @@ class ShangTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="国王：战略方向、资源分配",
+            representative="商汤",
         ),
         "zhenren": RoleDefinition(
             role_id="zhenren",
@@ -25,6 +26,7 @@ class ShangTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="占卜官：独立验证、仪式审批",
+            representative="巫咸",
             can_review=True,
             can_reject=True,
         ),
@@ -34,6 +36,7 @@ class ShangTopology(BaseDynastyTopology):
             abstract_layer="record",
             model_type="documenter",
             description="书记官：记录决策、维护档案",
+            representative="伊尹",
         ),
         "gongzheng": RoleDefinition(
             role_id="gongzheng",
@@ -41,6 +44,7 @@ class ShangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="工程主管：跨项目执行",
+            representative="傅说",
             can_execute=True,
         ),
     }

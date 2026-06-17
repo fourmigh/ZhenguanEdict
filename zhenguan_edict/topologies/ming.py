@@ -18,6 +18,7 @@ class MingTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="最终决策、批红",
+            representative="明太祖",
         ),
         "grand_secretariat": RoleDefinition(
             role_id="grand_secretariat",
@@ -25,6 +26,7 @@ class MingTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="起草政策回应（票拟）、向皇帝汇报",
+            representative="张居正",
         ),
         "silijian": RoleDefinition(
             role_id="silijian",
@@ -32,6 +34,7 @@ class MingTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="宦官机构：次级审批通道、会签",
+            representative="郑和",
             can_review=True,
         ),
         "changwei": RoleDefinition(
@@ -40,6 +43,7 @@ class MingTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="独立情报、影子验证",
+            representative="马顺",
             can_review=True,
         ),
         "six_ministries": RoleDefinition(
@@ -48,6 +52,7 @@ class MingTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="领域执行",
+            representative="于谦",
             can_execute=True,
         ),
     }

@@ -18,6 +18,7 @@ class XiaTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="国王：目标设定、最终批准",
+            representative="大禹",
         ),
         "priest": RoleDefinition(
             role_id="priest",
@@ -25,6 +26,7 @@ class XiaTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="占卜官：质量检查、解读天意",
+            representative="羲和",
             can_review=True,
             can_reject=True,
         ),
@@ -34,6 +36,7 @@ class XiaTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="工程主管：执行、建设、实施",
+            representative="皋陶",
             can_execute=True,
         ),
     }

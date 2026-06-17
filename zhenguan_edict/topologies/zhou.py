@@ -18,6 +18,7 @@ class ZhouTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="天下共主：高层远见、诸侯任命、最终仲裁",
+            representative="周武王",
         ),
         "qingshi": RoleDefinition(
             role_id="qingshi",
@@ -25,6 +26,7 @@ class ZhouTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="中央大臣：政策起草、诸侯间协调",
+            representative="周公旦",
         ),
         "zhuhou_a": RoleDefinition(
             role_id="zhuhou_a",
@@ -32,6 +34,7 @@ class ZhouTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="地方领主：并行执行",
+            representative="齐太公",
             can_execute=True,
         ),
         "zhuhou_b": RoleDefinition(
@@ -40,6 +43,7 @@ class ZhouTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="地方领主：并行执行",
+            representative="鲁周公",
             can_execute=True,
         ),
         "zhuhou_c": RoleDefinition(
@@ -48,6 +52,7 @@ class ZhouTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="地方领主：并行执行",
+            representative="召公奭",
             can_execute=True,
         ),
     }

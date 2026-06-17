@@ -55,6 +55,7 @@ class RoleDefinition:
     abstract_layer: str
     model_type: str
     description: str = ""
+    representative: str = ""
     can_reject: bool = False
     can_review: bool = False
     can_execute: bool = False

@@ -18,6 +18,7 @@ class SongTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="最高决策者",
+            representative="宋仁宗",
         ),
         "zhongshu_menxia": RoleDefinition(
             role_id="zhongshu_menxia",
@@ -25,6 +26,7 @@ class SongTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="合并的规划与审核（民政）",
+            representative="王安石",
         ),
         "shumiyuan": RoleDefinition(
             role_id="shumiyuan",
@@ -32,6 +34,7 @@ class SongTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="军事策略，独立于民政",
+            representative="狄青",
         ),
         "sansi": RoleDefinition(
             role_id="sansi",
@@ -39,6 +42,7 @@ class SongTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="reviewer",
             description="财政：收入、支出、专卖——民政财务三分",
+            representative="包拯",
             can_review=True,
         ),
         "six_ministries": RoleDefinition(
@@ -47,6 +51,7 @@ class SongTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="六部执行，权威减弱",
+            representative="范仲淹",
             can_execute=True,
         ),
     }

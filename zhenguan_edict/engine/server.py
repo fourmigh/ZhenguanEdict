@@ -61,6 +61,16 @@ class RegisterAgentRequest(BaseModel):
     display_name: str = ""
 
 
+class BatchAgentItem(BaseModel):
+    role_id: str
+    model_type: str = "lite"
+    display_name: str = ""
+
+
+class BatchAgentRequest(BaseModel):
+    agents: List[BatchAgentItem]
+
+
 # ── 引擎单例 ──
 
 class EngineServer:
@@ -223,6 +233,13 @@ class EngineServer:
         self._broadcast_sse({"type": "agent_registered", "agent_id": agent_id})
         return agent
 
+    def batch_register_agents(self, items: List[tuple]) -> List[AgentModel]:
+        agents = []
+        for role_id, model_type, display_name in items:
+            agent = self.register_agent(role_id, model_type, display_name)
+            agents.append(agent)
+        return agents
+
     def list_agents(self) -> List[AgentModel]:
         return list(self.agents.values())
 
@@ -384,6 +401,7 @@ async def current_dynasty():
             {
                 "role_id": r.role_id,
                 "display_name": r.display_name,
+                "representative": r.representative,
                 "abstract_layer": r.abstract_layer,
                 "model_type": r.model_type,
                 "can_review": r.can_review,
@@ -532,6 +550,22 @@ async def register_agent(req: RegisterAgentRequest):
         "model_type": agent.model_type,
         "display_name": agent.display_name,
     }
+
+
+@app.put("/api/agents/batch")
+async def batch_register_agents(req: BatchAgentRequest):
+    engine = _get_engine()
+    items = [(a.role_id, a.model_type, a.display_name) for a in req.agents]
+    agents = engine.batch_register_agents(items)
+    return [
+        {
+            "agent_id": a.agent_id,
+            "role_id": a.role_id,
+            "model_type": a.model_type,
+            "display_name": a.display_name,
+        }
+        for a in agents
+    ]
 
 
 # ── 奏折管理 ──

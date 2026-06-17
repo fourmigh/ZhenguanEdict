@@ -18,6 +18,7 @@ class QinTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="唯一决策权、最终签署",
+            representative="秦始皇",
         ),
         "chancellor": RoleDefinition(
             role_id="chancellor",
@@ -25,6 +26,7 @@ class QinTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="行政执行、政策实施",
+            representative="李斯",
         ),
         "censor": RoleDefinition(
             role_id="censor",
@@ -32,6 +34,7 @@ class QinTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="监督、合规监控、审计（只读，无驳回权）",
+            representative="冯去疾",
             can_review=True,
         ),
         "tingwei": RoleDefinition(
@@ -40,6 +43,7 @@ class QinTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="reviewer",
             description="规则解释、争议解决",
+            representative="蒙毅",
             can_execute=True,
         ),
         "junshou": RoleDefinition(
@@ -48,6 +52,7 @@ class QinTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="地方长官：统一规则执行",
+            representative="任嚣",
             can_execute=True,
         ),
     }

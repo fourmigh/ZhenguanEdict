@@ -18,6 +18,7 @@ class HanTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="最高决策",
+            representative="汉武帝",
         ),
         "chancellor": RoleDefinition(
             role_id="chancellor",
@@ -25,6 +26,7 @@ class HanTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="行政领导",
+            representative="萧何",
         ),
         "taiwei": RoleDefinition(
             role_id="taiwei",
@@ -32,6 +34,7 @@ class HanTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="军事监督",
+            representative="周亚夫",
         ),
         "censor_in_chief": RoleDefinition(
             role_id="censor_in_chief",
@@ -39,6 +42,7 @@ class HanTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="独立监督，掌管御史台（纯审查，不参与执行）",
+            representative="晁错",
             can_review=True,
             can_reject=True,
         ),
@@ -48,6 +52,7 @@ class HanTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="九位大臣：司法、财政、礼仪等专门领域",
+            representative="张汤",
             can_execute=True,
         ),
     }

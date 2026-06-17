@@ -18,6 +18,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="planner",
             description="最高决策者",
+            representative="唐太宗",
         ),
         "crown_prince": RoleDefinition(
             role_id="crown_prince",
@@ -25,6 +26,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="decision",
             model_type="lite",
             description="分拣：区分闲聊与正式任务",
+            representative="李治",
         ),
         "zhongshu": RoleDefinition(
             role_id="zhongshu",
@@ -32,6 +34,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="planner",
             description="规划中枢：起草方案、拆解子任务",
+            representative="房玄龄",
         ),
         "menxia": RoleDefinition(
             role_id="menxia",
@@ -39,6 +42,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="review",
             model_type="reviewer",
             description="审议把关：封驳权——可打回重做",
+            representative="魏徵",
             can_review=True,
             can_reject=True,
         ),
@@ -48,6 +52,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="planning",
             model_type="lite",
             description="调度大脑：派发任务、协调执行、汇总回奏",
+            representative="长孙无忌",
         ),
         "hubu": RoleDefinition(
             role_id="hubu",
@@ -55,6 +60,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="documenter",
             description="数据处理、资源核算",
+            representative="戴胄",
             can_execute=True,
         ),
         "libu": RoleDefinition(
@@ -63,6 +69,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="documenter",
             description="文档撰写、标准制定、协议管理",
+            representative="虞世南",
             can_execute=True,
         ),
         "bingbu": RoleDefinition(
@@ -71,6 +78,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="代码开发、工程实施",
+            representative="李靖",
             can_execute=True,
         ),
         "xingbu": RoleDefinition(
@@ -79,6 +87,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="reviewer",
             description="安全审计、合规检查、风险评估",
+            representative="裴寂",
             can_execute=True,
         ),
         "gongbu": RoleDefinition(
@@ -87,6 +96,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="coder",
             description="CI/CD、部署、工具链",
+            representative="阎立德",
             can_execute=True,
         ),
         "libu_personnel": RoleDefinition(
@@ -95,6 +105,7 @@ class SuiTangTopology(BaseDynastyTopology):
             abstract_layer="execution",
             model_type="lite",
             description="Agent 管理、权限维护、配置管理",
+            representative="高士廉",
             can_execute=True,
         ),
     }
