@@ -202,6 +202,7 @@ div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
 #agentFormTable tr.regdone { opacity: 0.45; }
 #agentFormTable tr.regdone td { border-bottom-color: transparent; }
 #batchRegisterBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 </style>
 </head>
 <body>
@@ -226,9 +227,6 @@ div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
     <div class="nav-item active" data-view="tasks" onclick="switchView('tasks')">
       <span class="icon">&#x1F4CB;</span> <span data-lang="nav_tasks">旨意看板</span>
     </div>
-    <div class="nav-item" data-view="dynasties" onclick="switchView('dynasties')">
-      <span class="icon">&#x1F3F0;</span> <span data-lang="nav_dynasties">朝代切换</span>
-    </div>
     <div class="nav-item" data-view="memorials" onclick="switchView('memorials')">
       <span class="icon">&#x1F4DC;</span> <span data-lang="nav_memorials">奏折阁</span>
     </div>
@@ -238,12 +236,6 @@ div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
   </div>
 
   <div class="main">
-    <!-- Dynasties view -->
-    <div class="view active" id="view-dynasties">
-      <div class="view-title" data-lang="title_dynasties">朝代切换</div>
-      <div class="dynasty-grid" id="dynastyGrid"></div>
-    </div>
-
     <!-- Tasks view -->
     <div class="view" id="view-tasks">
       <div class="view-title" data-lang="title_tasks">旨意看板</div>
@@ -278,6 +270,7 @@ div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
     <!-- Agents view -->
     <div class="view" id="view-agents">
       <div class="view-title" data-lang="title_agents">官员总览</div>
+      <div class="dynasty-grid" id="dynastyGrid" style="margin-bottom:16px"></div>
       <div class="toolbar">
         <button class="btn btn-primary" onclick="batchRegisterAgents()" id="batchRegisterBtn">&#x2795; <span data-lang="register_selected">批量注册</span></button>
         <button class="btn" onclick="loadAgents()">&#x21BB; <span data-lang="refresh">刷新</span></button>
@@ -417,7 +410,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 
 // View switching
-let currentView = 'dynasties';
+let currentView = 'tasks';
 function switchView(name) {
   currentView = name;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -425,7 +418,6 @@ function switchView(name) {
   document.getElementById('view-'+name).classList.add('active');
   document.querySelector(`.nav-item[data-view="${name}"]`).classList.add('active');
   if (name==='tasks') loadTasks();
-  else if (name==='dynasties') loadDynasties();
   else if (name==='memorials') loadMemorials();
   else if (name==='agents') loadAgents();
 }
@@ -504,28 +496,14 @@ function updateClock() {
   }
 }
 
-// ============ DYNASTIES ============
-async function loadDynasties() {
-  const data = await api('GET','/api/dynasties');
-  const cur = await api('GET','/api/dynasties/current');
-  const g = document.getElementById('dynastyGrid');
-  g.innerHTML = data.map(d => `
-    <div class="dynasty-card${d.name===cur.name?' active':''}" onclick="switchDynasty('${d.name}')">
-      <div class="dc-swatch" style="background:${d.color_scheme.accent}"></div>
-      <div class="dc-name">${d.display_name}</div>
-      <div class="dc-meta">${d.roles_count} roles</div>
-      <div class="dc-desc">${d.description}</div>
-    </div>`).join('');
-}
-
 async function switchDynasty(name) {
   const r = await api('POST','/api/dynasties/switch',{name});
   setDynastyColor(name);
   document.getElementById('dynastyLabel').textContent = r.display_name;
   document.getElementById('edictName').textContent = r.edict_name;
   toast(t('toast_switched') + ': ' + r.display_name);
-  loadDynasties();
   loadStatus();
+  switchView('agents');
 }
 
 // ============ TASKS ============
@@ -660,9 +638,23 @@ async function deleteMemorial(id) {
   loadMemorials(); loadStatus();
 }
 async function loadAgents() {
-  const cur = await api('GET','/api/dynasties/current');
+  const [data, cur] = await Promise.all([
+    api('GET','/api/dynasties'),
+    api('GET','/api/dynasties/current')
+  ]);
   const roles = cur.roles || [];
-  const agents = await api('GET','/api/agents');
+  const allAgents = await api('GET','/api/agents');
+  // Render dynasty cards
+  document.getElementById('dynastyGrid').innerHTML = data.map(d => `
+    <div class="dynasty-card${d.name===cur.name?' active':''}" onclick="switchDynasty('${d.name}')">
+      <div class="dc-swatch" style="background:${d.color_scheme.accent}"></div>
+      <div class="dc-name">${d.display_name}</div>
+      <div class="dc-meta">${d.roles_count} roles</div>
+      <div class="dc-desc">${d.description}</div>
+    </div>`).join('');
+  // Filter agents by current dynasty
+  const curRoleIds = new Set(roles.map(r => r.role_id));
+  const agents = allAgents.filter(a => curRoleIds.has(a.role_id));
   const existing = new Set(agents.map(a => a.role_id));
   const el = document.getElementById('agentRegisterForm');
   if (!roles.length) {
@@ -765,7 +757,6 @@ function connectSSE() {
     try { const d = JSON.parse(e.data);
       if (d.type === 'dynasty_switched') { setDynastyColor(d.dynasty); }
       if (currentView==='tasks') loadTasks();
-      else if (currentView==='dynasties') loadDynasties();
       else if (currentView==='memorials') loadMemorials();
       else if (currentView==='agents') loadAgents();
       loadStatus();
@@ -778,7 +769,6 @@ function connectSSE() {
 async function init() {
   updateClock(); setInterval(updateClock, 1000);
   setLang('zh');
-  setDynastyColor('suitang');
   try {
     const cur = await api('GET','/api/dynasties/current');
     setDynastyColor(cur.name);
@@ -788,7 +778,6 @@ async function init() {
     const sel = document.getElementById('memorialFilter');
     ds.forEach(d => { const o = document.createElement('option'); o.value=d.name; o.textContent=d.display_name; sel.appendChild(o); });
   } catch(_) {}
-  loadDynasties();
   loadStatus();
   connectSSE();
   switchView('tasks');
