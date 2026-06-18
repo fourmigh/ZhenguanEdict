@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class SuiTangTopology(BaseDynastyTopology):
     name = "suitang"
     display_name = "隋唐 · Sui-Tang"
-    description = "三省六部——延续千年的成熟治理。制定者-检查者闭环带封驳驳回权。"
+    description = "三省六部工程体系——规划机构起草方案、审核机构把关质量、执行机构分领域交付，带封驳驳回权。"
     edict_name = "敕"
     color_scheme = ColorScheme(accent="#C9A84C", accent_dim="#8B7332", bg="#1a0e02", bg2="#24180e", bg3="#34281c", border="#4a3a28")
 
@@ -17,7 +17,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="皇帝",
             abstract_layer="decision",
             model_type="planner",
-            description="最高决策者",
+            description="战略方向、立项决策、最终批准",
             representative="唐太宗",
         ),
         "crown_prince": RoleDefinition(
@@ -25,7 +25,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="太子",
             abstract_layer="decision",
             model_type="lite",
-            description="分拣：区分闲聊与正式任务",
+            description="任务分拣：区分 bug/feature/refactor，按优先级排入对应流程",
             representative="李治",
         ),
         "zhongshu": RoleDefinition(
@@ -33,7 +33,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="中书省",
             abstract_layer="planning",
             model_type="planner",
-            description="规划中枢：起草方案、拆解子任务",
+            description="方案起草：技术设计、子任务拆解、接口定义",
             representative="房玄龄",
         ),
         "menxia": RoleDefinition(
@@ -41,7 +41,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="门下省",
             abstract_layer="review",
             model_type="reviewer",
-            description="审议把关：封驳权——可打回重做",
+            description="方案审核：设计评审、代码审查、可驳回返工",
             representative="魏徵",
             can_review=True,
             can_reject=True,
@@ -51,7 +51,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="尚书省",
             abstract_layer="planning",
             model_type="lite",
-            description="调度大脑：派发任务、协调执行、汇总回奏",
+            description="任务调度：派发执行、协调进度、汇总回奏",
             representative="长孙无忌",
         ),
         "hubu": RoleDefinition(
@@ -59,7 +59,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="户部",
             abstract_layer="execution",
             model_type="documenter",
-            description="数据处理、资源核算",
+            description="数据处理、资源核算、性能监控",
             representative="戴胄",
             can_execute=True,
         ),
@@ -68,7 +68,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="礼部",
             abstract_layer="execution",
             model_type="documenter",
-            description="文档撰写、标准制定、协议管理",
+            description="文档撰写、技术规范、接口协议管理",
             representative="虞世南",
             can_execute=True,
         ),
@@ -77,7 +77,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="兵部",
             abstract_layer="execution",
             model_type="coder",
-            description="代码开发、工程实施",
+            description="核心功能开发、工程实施",
             representative="李靖",
             can_execute=True,
         ),
@@ -86,7 +86,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="刑部",
             abstract_layer="execution",
             model_type="reviewer",
-            description="安全审计、合规检查、风险评估",
+            description="安全审计、合规检查、漏洞排查",
             representative="裴寂",
             can_execute=True,
         ),
@@ -95,7 +95,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="工部",
             abstract_layer="execution",
             model_type="coder",
-            description="CI/CD、部署、工具链",
+            description="CI/CD、自动化工具链、部署运维",
             representative="阎立德",
             can_execute=True,
         ),
@@ -104,7 +104,7 @@ class SuiTangTopology(BaseDynastyTopology):
             display_name="吏部",
             abstract_layer="execution",
             model_type="lite",
-            description="Agent 管理、权限维护、配置管理",
+            description="Agent 注册、权限管理、配置维护",
             representative="高士廉",
             can_execute=True,
         ),

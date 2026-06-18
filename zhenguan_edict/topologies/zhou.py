@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class ZhouTopology(BaseDynastyTopology):
     name = "zhou"
     display_name = "周 · Zhou"
-    description = "星状群岛。中央向半自治诸侯授权，在各封地内并行工作。"
+    description = "星型架构：中央模块规划→诸侯独立并行开发。适合多模块并行交付。"
     edict_name = "命"
     color_scheme = ColorScheme(accent="#C23B22", accent_dim="#8B1A1A", bg="#1a0604", bg2="#260e0a", bg3="#341812", border="#46221a")
 
@@ -17,7 +17,7 @@ class ZhouTopology(BaseDynastyTopology):
             display_name="天子",
             abstract_layer="decision",
             model_type="planner",
-            description="天下共主：高层远见、诸侯任命、最终仲裁",
+            description="架构决策、全局规划、技术选型仲裁",
             representative="周武王",
         ),
         "qingshi": RoleDefinition(
@@ -25,7 +25,7 @@ class ZhouTopology(BaseDynastyTopology):
             display_name="卿士",
             abstract_layer="planning",
             model_type="planner",
-            description="中央大臣：政策起草、诸侯间协调",
+            description="模块设计、接口定义、多模块协调",
             representative="周公旦",
         ),
         "zhuhou_a": RoleDefinition(
@@ -33,7 +33,7 @@ class ZhouTopology(BaseDynastyTopology):
             display_name="诸侯甲",
             abstract_layer="execution",
             model_type="coder",
-            description="地方领主：并行执行",
+            description="独立模块开发、并行编码、本地交付",
             representative="齐太公",
             can_execute=True,
         ),
@@ -42,7 +42,7 @@ class ZhouTopology(BaseDynastyTopology):
             display_name="诸侯乙",
             abstract_layer="execution",
             model_type="coder",
-            description="地方领主：并行执行",
+            description="独立模块开发、并行编码、本地交付",
             representative="鲁周公",
             can_execute=True,
         ),
@@ -51,7 +51,7 @@ class ZhouTopology(BaseDynastyTopology):
             display_name="诸侯丙",
             abstract_layer="execution",
             model_type="coder",
-            description="地方领主：并行执行",
+            description="独立模块开发、并行编码、本地交付",
             representative="召公奭",
             can_execute=True,
         ),

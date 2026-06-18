@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class QingTopology(BaseDynastyTopology):
     name = "qing"
     display_name = "清 · Qing"
-    description = "双速循环：军机处紧急快车道（跳过审核）+ 六部标准审核道。"
+    description = "双速架构：军机处紧急快车道（跳过审查，热修复用）+ 六部标准开发道。"
     edict_name = "旨"
     color_scheme = ColorScheme(accent="#E8B830", accent_dim="#B8860B", bg="#1a1200", bg2="#241c0e", bg3="#30281a", border="#443a26")
 
@@ -17,7 +17,7 @@ class QingTopology(BaseDynastyTopology):
             display_name="用户/皇帝",
             abstract_layer="decision",
             model_type="planner",
-            description="入口：选择紧急或标准通道",
+            description="需求下发、通道选择（紧急/标准）",
             representative="康熙帝",
         ),
         "grand_council": RoleDefinition(
@@ -25,7 +25,7 @@ class QingTopology(BaseDynastyTopology):
             display_name="军机处",
             abstract_layer="planning",
             model_type="planner",
-            description="紧急决策，绕过正常流程",
+            description="紧急方案快速决策、热修复规划",
             representative="张廷玉",
         ),
         "six_ministries": RoleDefinition(
@@ -33,7 +33,7 @@ class QingTopology(BaseDynastyTopology):
             display_name="六部",
             abstract_layer="execution",
             model_type="coder",
-            description="标准领域执行（户/礼/兵/刑/工/吏）",
+            description="标准功能开发、多领域实施",
             representative="刘统勋",
             can_execute=True,
             can_review=True,
@@ -43,7 +43,7 @@ class QingTopology(BaseDynastyTopology):
             display_name="理藩院",
             abstract_layer="execution",
             model_type="documenter",
-            description="非汉民族事务，专门领域",
+            description="第三方集成、外部系统对接",
             representative="年羹尧",
             can_execute=True,
         ),
@@ -52,7 +52,7 @@ class QingTopology(BaseDynastyTopology):
             display_name="内务府",
             abstract_layer="execution",
             model_type="lite",
-            description="皇室内部事务，独立于民政",
+            description="内部工具维护、配置管理",
             representative="曹寅",
             can_execute=True,
         ),

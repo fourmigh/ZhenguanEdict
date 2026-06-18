@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class YanHuangTopology(BaseDynastyTopology):
     name = "yanhuang"
     display_name = "炎黄 · Yan-Huang"
-    description = "部落联盟，二人分工。P2P 对等结构，无层级、无审核。"
+    description = "P2P 结对——一人设计方案、一人编码实现。无审核、快速交付。"
     edict_name = "命"
     color_scheme = ColorScheme(accent="#D4A84B", accent_dim="#8B7332", bg="#1a0e04", bg2="#221810", bg3="#32281c", border="#4a3a28")
 
@@ -17,7 +17,7 @@ class YanHuangTopology(BaseDynastyTopology):
             display_name="炎帝",
             abstract_layer="decision",
             model_type="planner",
-            description="农耕与规划：资源评估、策略制定",
+            description="需求分析、技术方案设计、关键决策",
             representative="神农氏",
             can_review=True,
         ),
@@ -26,7 +26,7 @@ class YanHuangTopology(BaseDynastyTopology):
             display_name="黄帝",
             abstract_layer="execution",
             model_type="coder",
-            description="征伐与执行：策略实施、行动协调",
+            description="编码实现、调试修复、交付部署",
             representative="轩辕氏",
             can_execute=True,
         ),

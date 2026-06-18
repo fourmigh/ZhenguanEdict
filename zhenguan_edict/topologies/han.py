@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class HanTopology(BaseDynastyTopology):
     name = "han"
     display_name = "汉 · Han"
-    description = "三公三路并行校审，九卿专门领域执行。第一次成熟的分权体系。"
+    description = "三系统并行校审——方案、技术、审计三条线独立互审，执行端统一交付。"
     edict_name = "诏"
     color_scheme = ColorScheme(accent="#B22222", accent_dim="#8B0000", bg="#1a0404", bg2="#260e0a", bg3="#341812", border="#441e14")
 
@@ -17,7 +17,7 @@ class HanTopology(BaseDynastyTopology):
             display_name="皇帝",
             abstract_layer="decision",
             model_type="planner",
-            description="最高决策",
+            description="目标制定、战略决策、资源调配",
             representative="汉武帝",
         ),
         "chancellor": RoleDefinition(
@@ -25,7 +25,7 @@ class HanTopology(BaseDynastyTopology):
             display_name="丞相",
             abstract_layer="planning",
             model_type="planner",
-            description="行政领导",
+            description="方案策划、团队协同、进度管理",
             representative="萧何",
         ),
         "taiwei": RoleDefinition(
@@ -33,7 +33,7 @@ class HanTopology(BaseDynastyTopology):
             display_name="太尉",
             abstract_layer="planning",
             model_type="planner",
-            description="军事监督",
+            description="技术架构规划、风险评估、基础设施",
             representative="周亚夫",
         ),
         "censor_in_chief": RoleDefinition(
@@ -41,7 +41,7 @@ class HanTopology(BaseDynastyTopology):
             display_name="御史大夫",
             abstract_layer="review",
             model_type="reviewer",
-            description="独立监督，掌管御史台（纯审查，不参与执行）",
+            description="独立审查：代码审计、安全扫描、方案评估（可驳回）",
             representative="晁错",
             can_review=True,
             can_reject=True,
@@ -51,7 +51,7 @@ class HanTopology(BaseDynastyTopology):
             display_name="九卿",
             abstract_layer="execution",
             model_type="coder",
-            description="九位大臣：司法、财政、礼仪等专门领域",
+            description="全栈开发、功能交付、端到端实施",
             representative="张汤",
             can_execute=True,
         ),

@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class XiaTopology(BaseDynastyTopology):
     name = "xia"
     display_name = "夏 · Xia"
-    description = "线性三层。祭司作为占卜关卡——最早的 QA 审批节点。"
+    description = "线性三层流水线——规划→审查→执行，最早的分工协作模式。"
     edict_name = "命"
     color_scheme = ColorScheme(accent="#4A8C6F", accent_dim="#2D5A3D", bg="#04140a", bg2="#0a1e12", bg3="#122a1c", border="#1c3828")
 
@@ -17,7 +17,7 @@ class XiaTopology(BaseDynastyTopology):
             display_name="王",
             abstract_layer="decision",
             model_type="planner",
-            description="国王：目标设定、最终批准",
+            description="需求分析、方案设计、决策审批",
             representative="大禹",
         ),
         "priest": RoleDefinition(
@@ -25,7 +25,7 @@ class XiaTopology(BaseDynastyTopology):
             display_name="祭司",
             abstract_layer="review",
             model_type="reviewer",
-            description="占卜官：质量检查、解读天意",
+            description="方案评审、代码审查、质量验收",
             representative="羲和",
             can_review=True,
             can_reject=True,
@@ -35,7 +35,7 @@ class XiaTopology(BaseDynastyTopology):
             display_name="工正",
             abstract_layer="execution",
             model_type="coder",
-            description="工程主管：执行、建设、实施",
+            description="编码实现、构建部署、技术执行",
             representative="皋陶",
             can_execute=True,
         ),

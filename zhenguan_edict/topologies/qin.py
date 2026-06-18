@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class QinTopology(BaseDynastyTopology):
     name = "qin"
     display_name = "秦 · Qin"
-    description = "严格层级，硬编码路由，无自由裁量权。御史只读监控。"
+    description = "严格层级架构：顶层决策→中层细化→底层执行。硬编码路由，无自由裁量。"
     edict_name = "制"
     color_scheme = ColorScheme(accent="#7E8A9E", accent_dim="#4A5568", bg="#040618", bg2="#0a0e22", bg3="#141830", border="#242842", text="#b8bcd0", text_dim="#6a7288", text_muted="#4a4e5a")
 
@@ -17,7 +17,7 @@ class QinTopology(BaseDynastyTopology):
             display_name="皇帝",
             abstract_layer="decision",
             model_type="planner",
-            description="唯一决策权、最终签署",
+            description="指令下达、方案审批、标准制定",
             representative="秦始皇",
         ),
         "chancellor": RoleDefinition(
@@ -25,7 +25,7 @@ class QinTopology(BaseDynastyTopology):
             display_name="丞相",
             abstract_layer="planning",
             model_type="planner",
-            description="行政执行、政策实施",
+            description="方案细化、执行规划、督查落实",
             representative="李斯",
         ),
         "censor": RoleDefinition(
@@ -33,7 +33,7 @@ class QinTopology(BaseDynastyTopology):
             display_name="御史",
             abstract_layer="review",
             model_type="reviewer",
-            description="监督、合规监控、审计（只读，无驳回权）",
+            description="只读审计：合规审查、质量监督、问题上报",
             representative="冯去疾",
             can_review=True,
         ),
@@ -42,7 +42,7 @@ class QinTopology(BaseDynastyTopology):
             display_name="廷尉",
             abstract_layer="execution",
             model_type="reviewer",
-            description="规则解释、争议解决",
+            description="规则解释、争议仲裁、安全审核",
             representative="蒙毅",
             can_execute=True,
         ),
@@ -51,7 +51,7 @@ class QinTopology(BaseDynastyTopology):
             display_name="郡守",
             abstract_layer="execution",
             model_type="coder",
-            description="地方长官：统一规则执行",
+            description="标准化实施、本地化交付、规范执行",
             representative="任嚣",
             can_execute=True,
         ),

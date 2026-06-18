@@ -653,8 +653,7 @@ async function loadAgents() {
       <div class="dc-desc">${d.description}</div>
     </div>`).join('');
   // Filter agents by current dynasty
-  const curRoleIds = new Set(roles.map(r => r.role_id));
-  const agents = allAgents.filter(a => curRoleIds.has(a.role_id));
+  const agents = allAgents.filter(a => a.dynasty === cur.name);
   const existing = new Set(agents.map(a => a.role_id));
   const el = document.getElementById('agentRegisterForm');
   if (!roles.length) {

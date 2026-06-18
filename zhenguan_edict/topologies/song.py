@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class SongTopology(BaseDynastyTopology):
     name = "song"
     display_name = "宋 · Song"
-    description = "权力分散，多条并行审核路径。Agent 冗余——关键任务多方独立验证。"
+    description = "权力分散架构：民政、军事、财政三条规划线并行独立，互不统属。关键任务多方冗余审查。"
     edict_name = "制"
     color_scheme = ColorScheme(accent="#A82222", accent_dim="#6B1010", bg="#180606", bg2="#220e0a", bg3="#301812", border="#401e16")
 
@@ -17,7 +17,7 @@ class SongTopology(BaseDynastyTopology):
             display_name="皇帝",
             abstract_layer="decision",
             model_type="planner",
-            description="最高决策者",
+            description="目标确立、最终决策",
             representative="宋仁宗",
         ),
         "zhongshu_menxia": RoleDefinition(
@@ -25,7 +25,7 @@ class SongTopology(BaseDynastyTopology):
             display_name="中书门下",
             abstract_layer="planning",
             model_type="planner",
-            description="合并的规划与审核（民政）",
+            description="民政方案规划、功能设计评审",
             representative="王安石",
         ),
         "shumiyuan": RoleDefinition(
@@ -33,7 +33,7 @@ class SongTopology(BaseDynastyTopology):
             display_name="枢密院",
             abstract_layer="planning",
             model_type="planner",
-            description="军事策略，独立于民政",
+            description="技术架构规划、系统安全策略",
             representative="狄青",
         ),
         "sansi": RoleDefinition(
@@ -41,7 +41,7 @@ class SongTopology(BaseDynastyTopology):
             display_name="三司使",
             abstract_layer="planning",
             model_type="reviewer",
-            description="财政：收入、支出、专卖——民政财务三分",
+            description="预算审计、资源核算、成本审查",
             representative="包拯",
             can_review=True,
         ),
@@ -50,7 +50,7 @@ class SongTopology(BaseDynastyTopology):
             display_name="六部",
             abstract_layer="execution",
             model_type="coder",
-            description="六部执行，权威减弱",
+            description="多领域开发实施、功能交付",
             representative="范仲淹",
             can_execute=True,
         ),

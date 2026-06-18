@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class MingTopology(BaseDynastyTopology):
     name = "ming"
     display_name = "明 · Ming"
-    description = "双轨制：正式通道（内阁票拟→批红）+ 影子通道（司礼监会签与厂卫暗访）。"
+    description = "双轨制架构：正式通道（内阁方案设计→皇帝终批）+ 影子通道（司礼监备份审核、厂卫安全渗透）。"
     edict_name = "谕"
     color_scheme = ColorScheme(accent="#DC3023", accent_dim="#A02010", bg="#1a0804", bg2="#26100a", bg3="#341a12", border="#482618")
 
@@ -17,7 +17,7 @@ class MingTopology(BaseDynastyTopology):
             display_name="皇帝",
             abstract_layer="decision",
             model_type="planner",
-            description="最终决策、批红",
+            description="最终决策、方案签署",
             representative="明太祖",
         ),
         "grand_secretariat": RoleDefinition(
@@ -25,7 +25,7 @@ class MingTopology(BaseDynastyTopology):
             display_name="内阁",
             abstract_layer="planning",
             model_type="planner",
-            description="起草政策回应（票拟）、向皇帝汇报",
+            description="技术方案设计、方案起草汇报",
             representative="张居正",
         ),
         "silijian": RoleDefinition(
@@ -33,7 +33,7 @@ class MingTopology(BaseDynastyTopology):
             display_name="司礼监",
             abstract_layer="review",
             model_type="reviewer",
-            description="宦官机构：次级审批通道、会签",
+            description="备份审核：合规会签、二次审查",
             representative="郑和",
             can_review=True,
         ),
@@ -42,7 +42,7 @@ class MingTopology(BaseDynastyTopology):
             display_name="厂卫",
             abstract_layer="review",
             model_type="reviewer",
-            description="独立情报、影子验证",
+            description="渗透测试、安全审计、影子验证",
             representative="马顺",
             can_review=True,
         ),
@@ -51,7 +51,7 @@ class MingTopology(BaseDynastyTopology):
             display_name="六部",
             abstract_layer="execution",
             model_type="coder",
-            description="领域执行",
+            description="多领域工程实施、功能交付",
             representative="于谦",
             can_execute=True,
         ),

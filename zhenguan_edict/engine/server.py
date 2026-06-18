@@ -271,6 +271,7 @@ class EngineServer:
             role_id=role_id,
             model_type=model_type,
             display_name=display_name or role_id,
+            dynasty=self.active_topology.name if self.active_topology else "unknown",
         )
         self.agents[agent_id] = agent
         logger.info("Agent registered: %s (role=%s, model=%s)", agent_id, role_id, model_type)
@@ -345,7 +346,7 @@ class EngineServer:
                 if planner is None:
                     continue
                 agent = next(
-                    (a for a in self.agents.values() if a.role_id == planner.role_id),
+                    (a for a in self.agents.values() if a.role_id == planner.role_id and a.dynasty == topo.name),
                     None
                 )
                 if agent is None:
@@ -680,6 +681,7 @@ async def list_agents():
             "role_id": a.role_id,
             "model_type": a.model_type,
             "display_name": a.display_name,
+            "dynasty": a.dynasty,
             "is_busy": a.is_busy,
             "current_task_id": a.current_task_id,
             "tasks_completed": a.tasks_completed,

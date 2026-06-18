@@ -7,7 +7,7 @@ from zhenguan_edict.topologies.base import BaseDynastyTopology
 class ShangTopology(BaseDynastyTopology):
     name = "shang"
     display_name = "商 · Shang"
-    description = "四节点流水线带预写日志。验证与执行分离，史官引入永久记录。"
+    description = "四节点开发流水线——规划→审查→文档→执行。审查与执行分离，引入文档记录。"
     edict_name = "命"
     color_scheme = ColorScheme(accent="#E8E0D0", accent_dim="#A09888", bg="#181612", bg2="#201e1a", bg3="#2c2a26", border="#3e3c38", text="#e8e0d0", text_dim="#a09888", text_muted="#70685c")
 
@@ -17,7 +17,7 @@ class ShangTopology(BaseDynastyTopology):
             display_name="王",
             abstract_layer="decision",
             model_type="planner",
-            description="国王：战略方向、资源分配",
+            description="项目规划、方案决策、资源调度",
             representative="商汤",
         ),
         "zhenren": RoleDefinition(
@@ -25,7 +25,7 @@ class ShangTopology(BaseDynastyTopology):
             display_name="贞人",
             abstract_layer="review",
             model_type="reviewer",
-            description="占卜官：独立验证、仪式审批",
+            description="独立测试验证、代码审查、合规检查",
             representative="巫咸",
             can_review=True,
             can_reject=True,
@@ -35,7 +35,7 @@ class ShangTopology(BaseDynastyTopology):
             display_name="史官",
             abstract_layer="record",
             model_type="documenter",
-            description="书记官：记录决策、维护档案",
+            description="API 文档、技术报告、知识归档",
             representative="伊尹",
         ),
         "gongzheng": RoleDefinition(
@@ -43,7 +43,7 @@ class ShangTopology(BaseDynastyTopology):
             display_name="工正",
             abstract_layer="execution",
             model_type="coder",
-            description="工程主管：跨项目执行",
+            description="功能开发、系统集成、实施交付",
             representative="傅说",
             can_execute=True,
         ),

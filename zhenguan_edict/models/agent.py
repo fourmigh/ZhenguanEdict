@@ -9,6 +9,7 @@ class AgentModel:
     role_id: str
     model_type: str
     display_name: str = ""
+    dynasty: str = ""
     is_busy: bool = False
     current_task_id: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.now)
