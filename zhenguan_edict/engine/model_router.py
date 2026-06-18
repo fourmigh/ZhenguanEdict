@@ -62,11 +62,15 @@ def ensure_models() -> None:
             subprocess.run(["ollama", "pull", model], timeout=600)
             logger.info("Model %s pulled", model)
 
-def build_system_prompt(topo_name: str, role_display_name: str, representative: str, description: str) -> str:
-    return (
-        f"你是{representative}，{topo_name}时期的{role_display_name}。{description}。"
-        f"请用古代官场奏对风格回答，言简意赅。"
-    )
+def build_system_prompt(topo_name: str, role_display_name: str, representative: str, description: str, model_type: str = "") -> str:
+    base = f"你是{representative}，{topo_name}时期的{role_display_name}。{description}。"
+    style_map = {
+        "planner":    "输出技术方案文档：包含架构设计、接口定义、数据流说明。语言技术化、结构化。",
+        "coder":      "直接输出可运行的代码，使用代码块包裹。不要输出方案、计划、解释或古风奏折。",
+        "reviewer":   "输出评审意见：用条款形式列出问题、风险和改进建议。",
+        "documenter": "输出技术文档：包含用途说明、使用方法、注意事项。清晰分段。",
+    }
+    return base + style_map.get(model_type, "请用古代官场奏对风格回答，言简意赅。")
 
 async def chat(model: str, messages: List[Dict], timeout: int = 30) -> Optional[str]:
     import asyncio

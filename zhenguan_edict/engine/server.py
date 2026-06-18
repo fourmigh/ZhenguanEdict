@@ -156,10 +156,11 @@ class EngineServer:
             {"role": "system", "content": build_system_prompt(
                 topo.name, planner_role.display_name,
                 planner_role.representative, planner_role.description,
+                model_type="planner",
             )},
             {"role": "user", "content": prompt},
         ]
-        result = await chat(MODEL_MAP.get("planner", "ministral-3"), messages)
+        result = await chat(MODEL_MAP.get("planner", "lite"), messages)
         if result:
             return result.strip()[:MAX_LEN]
         logger.info("Ollama title gen returned empty, fallback to truncation")
@@ -372,6 +373,7 @@ class EngineServer:
                                     {"role": "system", "content": build_system_prompt(
                                         topo.name, role_def.display_name,
                                         role_def.representative, role_def.description,
+                                        model_type=role_type,
                                     )},
                                     {"role": "user", "content": input_content},
                                 ]
