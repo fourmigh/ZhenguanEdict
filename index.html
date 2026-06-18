@@ -12,7 +12,7 @@
   --border: #3a322c; --accent: #C9A84C; --accent-dim: #8B7332;
   --card-bg: #1e1814; --shadow: rgba(0,0,0,0.5);
   --danger: #b22222; --success: #4a8c6f; --warning: #c9a84c;
-  --radius: 6px; --font: 'Segoe UI','Noto Sans SC','PingFang SC',sans-serif;
+  --radius: 6px; --font: 'Segoe UI','Noto Sans SC','PingFang SC',sans-serif; --font-mono: 'Cascadia Code','Fira Code','Consolas',monospace;
 }
 html, body { height: 100%; }
 body {
@@ -167,15 +167,17 @@ div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
   content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px;
   width: 1px; background: var(--border);
 }
-.tl-item { position: relative; padding: 6px 0 6px 12px; }
-.tl-item::before {
-  content: ''; position: absolute; left: -20px; top: 12px;
-  width: 7px; height: 7px; border-radius: 50%; background: var(--accent-dim);
-  border: 2px solid var(--bg);
-}
-.tl-item .tl-time { font-size: 10px; color: var(--text-muted); }
-.tl-item .tl-action { font-size: 12px; font-weight: 500; }
-.tl-item .tl-detail { font-size: 11px; color: var(--text-dim); }
+/* 奏折管道 */
+.memorial-pipeline { display: flex; flex-direction: column; gap: 4px; }
+.pipe-step { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; background: var(--card-bg); }
+.pipe-header { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+.pipe-agent { color: var(--accent); }
+.pipe-state { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+.pipe-io { margin-top: 4px; }
+.pipe-io pre { font: 11px/1.5 var(--font-mono); background: var(--bg2); padding: 6px 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-all; margin: 0; max-height: 300px; overflow-y: auto; }
+.io-label { font-size: 11px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 2px; }
+.pipe-input { border-left: 3px solid var(--accent-dim); padding-left: 6px; }
+.pipe-output { border-left: 3px solid var(--accent); padding-left: 6px; }
 /* Toolbar */
 .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
 .toolbar .filter-input {
@@ -309,10 +311,13 @@ div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px" id="transitionTaskInfo"></div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;padding:8px;background:var(--bg3);border-radius:4px;white-space:pre-wrap;word-break:break-all" id="transitionTaskContent"></div>
     <div style="font-size:12px;color:var(--text);margin-bottom:12px;padding:10px;background:var(--bg2);border:1px solid var(--accent-dim);border-radius:4px;white-space:pre-wrap;word-break:break-all" id="transitionTaskResult"></div>
-    <label data-lang="form_target_state">目标状态</label>
-    <div class="transition-list" id="transitionList"></div>
-    <label data-lang="form_reason">原因</label>
-    <textarea id="transitionReason"></textarea>
+    <div id="transitionCompleted" style="display:none;text-align:center;padding:16px;color:var(--success);font-size:13px" data-lang="task_completed">任务已完成</div>
+    <div id="transitionControls">
+      <label data-lang="form_target_state">目标状态</label>
+      <div class="transition-list" id="transitionList"></div>
+      <label data-lang="form_reason">原因</label>
+      <textarea id="transitionReason"></textarea>
+    </div>
     <div class="btn-row">
       <button class="btn" onclick="closeModal('modalTransition')" data-lang="cancel">取消</button>
     </div>
@@ -350,7 +355,7 @@ const STR = {
     total:'共',items:'项',create_at:'创建于',transition_to:'转至',
     no_transitions:'无可流转状态',task_detail:'任务详情',
     task_created:'任务已创建',dynasty_switched:'已切换至',
-    toast_created:'已创建',toast_switched:'已切换至',
+    toast_created:'已创建',toast_switched:'已切换至',task_completed:'任务已完成',
   },
   en: {
     dynasty_current:'Current Dynasty',nav_tasks:'Task Board',nav_dynasties:'Dynasties',
@@ -369,7 +374,7 @@ const STR = {
     total:'Total',items:'items',create_at:'Created at',transition_to:'To',
     no_transitions:'No transitions available',task_detail:'Task Detail',
     task_created:'Task created',dynasty_switched:'Switched to',
-    toast_created:'Created',toast_switched:'Switched to',
+    toast_created:'Created',toast_switched:'Switched to',task_completed:'Task completed',
   }
 };
 
@@ -559,6 +564,7 @@ async function openTransition(taskId) {
   const task = await api('GET','/api/tasks/'+taskId);
   const cur = await api('GET','/api/dynasties/current');
   const trans = cur.state_machine.transitions.filter(t => t.from === task.state);
+  const isTerminal = task.state === 'completed';
   document.getElementById('transitionTaskInfo').textContent = task.title + ' [' + task.state + ']';
   document.getElementById('transitionTaskContent').textContent = task.content;
   const resultEl = document.getElementById('transitionTaskResult');
@@ -568,9 +574,12 @@ async function openTransition(taskId) {
   } else {
     resultEl.style.display = 'none';
   }
+  document.getElementById('transitionCompleted').style.display = isTerminal ? 'block' : 'none';
+  document.getElementById('transitionControls').style.display = isTerminal ? 'none' : 'block';
+  document.querySelector('#modalTransition .modal-title').textContent = isTerminal ? t('task_detail') : t('modal_transition');
   document.getElementById('transitionReason').value = '';
   const list = document.getElementById('transitionList');
-  if (trans.length) {
+  if (!isTerminal && trans.length) {
     list.innerHTML = trans.map(t => `<button class="btn btn-primary btn-sm" onclick="doTransition('${t.to}')">${t.to}</button>`).join('');
   } else {
     list.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">-</span>';
@@ -617,18 +626,38 @@ async function loadMemorials() {
 async function openMemorial(id) {
   const m = await api('GET','/api/memorials/'+id);
   const entries = m.entries || [];
+  // 将 llm_response + 后续 transition 组合为管道步骤
+  let steps = [], prevState = 'new';
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (e.action === 'llm_response') {
+      const nextTrans = entries.slice(i+1).find(x => x.action === 'transition');
+      const targetState = nextTrans ? nextTrans.decision : '?';
+      const agentName = e.decision_reason ? e.decision_reason.replace(/^by /,'') : e.actor_id;
+      steps.push({
+        agent: agentName, from: prevState, to: targetState,
+        input: e.input_content || '', output: e.output_content || e.content || '',
+      });
+    } else if (e.action === 'transition') {
+      prevState = e.decision;
+    }
+  }
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   document.getElementById('memorialDetail').innerHTML = `
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">
       ${m.task_title} · ${m.dynasty_display_name||m.dynasty} · ${fmtTime(m.created_at)}
     </div>
-    ${entries.length ? '<div class="timeline">'+entries.map(e => `
-      <div class="tl-item">
-        <div class="tl-time">${fmtTime(e.timestamp)}</div>
-        <div class="tl-action">${e.action}${e.decision?' → '+e.decision:''}</div>
-        <div class="tl-detail">${e.actor_role} ${e.content||''} ${e.decision_reason?'('+e.decision_reason+')':''}</div>
-        ${Object.keys(e.token_usage).length ? '<div class="tl-detail" style="font-size:10px">tokens: '+JSON.stringify(e.token_usage)+'</div>' : ''}
-      </div>`).join('')+'</div>' : '<div class="empty-state">-</div>'}
-    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">${t('tokens')}: ${Object.values(m.total_tokens||{}).reduce((a,b)=>a+b,0)}</div>`;
+    ${steps.length ? '<div class="memorial-pipeline">' + steps.map((s, idx) => `
+      <div class="pipe-step">
+        <div class="pipe-header">
+          <span class="pipe-agent">${esc(s.agent)}</span>
+          <span class="pipe-state">${s.from} → ${s.to}</span>
+        </div>
+        ${idx === 0 && s.input ? `<div class="pipe-io pipe-input"><span class="io-label">← 输入:</span><pre>${esc(s.input)}</pre></div>` : ''}
+        <div class="pipe-io pipe-output"><span class="io-label">→ 输出:</span><pre>${esc(s.output)}</pre></div>
+      </div>
+    `).join('') + '</div>' : '<div class="empty-state">-</div>'}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:12px">${t('tokens')}: ${Object.values(m.total_tokens||{}).reduce((a,b)=>a+b,0)}</div>`;
   openModal('modalMemorial');
 }
 async function deleteMemorial(id) {

@@ -16,6 +16,8 @@ class MemorialEntry:
     decision_reason: Optional[str] = None
     token_usage: Dict[str, int] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    input_content: str = ""
+    output_content: str = ""
 
 
 class Memorial(ABC):

@@ -229,7 +229,8 @@ class EngineServer:
         return f"memorial-{self._memorial_counter:04d}"
 
     def _append_entry(
-        self, task_id: str, action: str, detail: str, reason: str = ""
+        self, task_id: str, action: str, detail: str, reason: str = "",
+        input_content: str = "", output_content: str = ""
     ) -> None:
         for m in self.memorials.values():
             if m.task_id == task_id:
@@ -242,6 +243,8 @@ class EngineServer:
                     content=detail if not reason else f"{detail}: {reason}",
                     decision=detail,
                     decision_reason=reason,
+                    input_content=input_content,
+                    output_content=output_content,
                 )
                 m.entries.append(entry)
                 return
@@ -327,7 +330,7 @@ class EngineServer:
     # ═══ 生命周期 ═══
 
     async def _auto_process_loop(self) -> None:
-        """背景循环：自动将 new 任务分派给对应朝代 planner agent 并推进状态。"""
+        """背景循环：按当前状态分派对应角色 LLM 并推进状态。"""
         while self._running:
             TERMINAL = {TaskState.COMPLETED, TaskState.REJECTED, TaskState.CANCELLED}
             for task in list(self.tasks.values()):
@@ -339,58 +342,71 @@ class EngineServer:
                 topo = self.active_topology
                 if topo is None:
                     continue
-                planner = next(
-                    (r for r in topo.roles.values() if r.model_type == "planner"),
-                    None
-                )
-                if planner is None:
-                    continue
-                agent = next(
-                    (a for a in self.agents.values() if a.role_id == planner.role_id and a.dynasty == topo.name),
-                    None
-                )
-                if agent is None:
-                    continue
-                agent.is_busy = True
-                agent.current_task_id = task.task_id
-                if "_llm_processed" not in task.metadata:
-                    role_def = topo.roles.get(agent.role_id)
-                    if role_def:
-                        messages = [
-                            {"role": "system", "content": build_system_prompt(
-                                topo.name, role_def.display_name,
-                                role_def.representative, role_def.description,
-                            )},
-                            {"role": "user", "content": task.content},
-                        ]
-                        result = await chat(
-                            MODEL_MAP.get(role_def.model_type, "lite"),
-                            messages,
+                target_state = allowed[0]
+                # 按当前状态映射角色：(model_type, metadata_flag)
+                state_role_map = {
+                    TaskState.NEW: ("planner", "_llm_planned"),
+                    TaskState.EXECUTING: ("coder", "_llm_executed"),
+                }
+                mapping = state_role_map.get(task.state)
+                agent_name = "engine"
+                if mapping:
+                    role_type, flag = mapping
+                    if flag not in task.metadata:
+                        role_def = next(
+                            (r for r in topo.roles.values() if r.model_type == role_type),
+                            None
                         )
-                        if result:
-                            task.metadata["result"] = result
-                            task.metadata["_llm_processed"] = True
-                            self._append_entry(
-                                task.task_id, "llm_response",
-                                result[:200],
-                                f"by {agent.display_name}",
+                        if role_def:
+                            agent = next(
+                                (a for a in self.agents.values() if a.role_id == role_def.role_id and a.dynasty == topo.name),
+                                None
                             )
-                            agent.total_tokens_consumed += len(result)
-                allowed = self.state_machine.allowed_transitions(task.state)
-                if allowed:
-                    try:
-                        await self.transition_task(
-                            task.task_id, allowed[0].value,
-                            f"auto-dispatch by {agent.display_name}"
-                        )
-                        agent.tasks_completed += 1
-                    except Exception as e:
-                        logger.warning("auto-dispatch failed for %s: %s", task.task_id, e)
-                agent.is_busy = False
-                agent.current_task_id = None
+                            if agent:
+                                agent_name = agent.display_name
+                                agent.is_busy = True
+                                agent.current_task_id = task.task_id
+                                # 本步的输入：新任务用原内容，后续步骤用上一步输出
+                                input_content = task.content if task.state == TaskState.NEW else task.metadata.get("result", "")
+                                messages = [
+                                    {"role": "system", "content": build_system_prompt(
+                                        topo.name, role_def.display_name,
+                                        role_def.representative, role_def.description,
+                                    )},
+                                    {"role": "user", "content": input_content},
+                                ]
+                                result = await chat(
+                                    MODEL_MAP.get(role_def.model_type, "lite"),
+                                    messages,
+                                )
+                                if result:
+                                    existing = task.metadata.get("result", "")
+                                    task.metadata["result"] = (existing + "\n\n---\n\n" + result) if existing else result
+                                    task.metadata[flag] = True
+                                    self._append_entry(
+                                        task.task_id, "llm_response",
+                                        result[:200],
+                                        f"by {agent.display_name}",
+                                        input_content=input_content,
+                                        output_content=result,
+                                    )
+                                    agent.total_tokens_consumed += len(result)
+                                agent.is_busy = False
+                                agent.current_task_id = None
+                # 推进状态
+                try:
+                    await self.transition_task(
+                        task.task_id, target_state.value,
+                        f"auto-dispatch by {agent_name}",
+                    )
+                except Exception as e:
+                    logger.warning("auto-dispatch failed for %s: %s", task.task_id, e)
             await asyncio.sleep(2)
 
     async def start(self) -> None:
+        from zhenguan_edict.engine.model_router import ensure_ollama, ensure_models
+        ensure_ollama()
+        ensure_models()
         self._running = True
         self._auto_task = asyncio.create_task(self._auto_process_loop())
         logger.info("ZhenguanEdict Engine started")
