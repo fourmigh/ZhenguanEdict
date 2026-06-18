@@ -800,6 +800,8 @@ async def get_memorial(memorial_id: str):
                 "decision": e.decision,
                 "decision_reason": e.decision_reason,
                 "token_usage": e.token_usage,
+                "input_content": e.input_content,
+                "output_content": e.output_content,
             }
             for e in memorial.entries
         ],

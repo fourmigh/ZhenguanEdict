@@ -72,7 +72,7 @@ def build_system_prompt(topo_name: str, role_display_name: str, representative: 
     }
     return base + style_map.get(model_type, "请用古代官场奏对风格回答，言简意赅。")
 
-async def chat(model: str, messages: List[Dict], timeout: int = 30) -> Optional[str]:
+async def chat(model: str, messages: List[Dict], timeout: int = 180) -> Optional[str]:
     import asyncio
     data = json.dumps({"model": model, "messages": messages, "stream": False}).encode()
     req = urllib.request.Request(
