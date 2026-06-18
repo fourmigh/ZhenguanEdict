@@ -106,12 +106,15 @@ a { color: var(--accent); text-decoration: none; }
 .kanban-col-header { font-size: 11px; font-weight: 600; color: var(--text-dim); padding: 4px 8px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 .kanban-card {
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px;
-  padding: 8px 10px; margin-bottom: 6px; cursor: pointer; transition: all .15s;
-  font-size: 12px;
+  padding: 8px 22px 8px 10px; margin-bottom: 6px; cursor: pointer; transition: all .15s;
+  font-size: 12px; position: relative;
 }
 .kanban-card:hover { border-color: var(--accent-dim); }
 .kanban-card .kc-title { font-weight: 500; margin-bottom: 2px; }
 .kanban-card .kc-meta { font-size: 10px; color: var(--text-muted); }
+.kanban-card .kc-del { position: absolute; top: 1px; right: 3px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 3px; opacity: 0; transition: opacity .15s; }
+.kanban-card:hover .kc-del { opacity: 1; }
+.kanban-card .kc-del:hover { color: var(--danger); }
 /* Modal */
 .modal-overlay {
   display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -344,7 +347,7 @@ const STR = {
     form_model_type:'模型类型',form_display_name:'显示名称',
     filter_all:'全部状态',filter_all_dynasty:'全部朝代',
     footer_status:'引擎状态',empty_tasks:'暂无任务',empty_memorials:'暂无奏折',
-    empty_agents:'暂无 Agent',registered:'已注册',register_selected:'批量注册',form_representative:'代表人物',register:'注册',refresh:'刷新',no_roles_for_dynasty:'当前朝代无官员角色',running:'运行中',busy:'忙碌',idle:'空闲',
+    empty_agents:'暂无 Agent',registered:'已注册',unregister:'注销',register_selected:'批量注册',form_representative:'代表人物',register:'注册',refresh:'刷新',no_roles_for_dynasty:'当前朝代无官员角色',running:'运行中',busy:'忙碌',idle:'空闲',
     tokens:'Token',tasks:'任务',agents:'Agent',memorials:'奏折',
     total:'共',items:'项',create_at:'创建于',transition_to:'转至',
     no_transitions:'无可流转状态',task_detail:'任务详情',
@@ -363,7 +366,7 @@ const STR = {
     form_role:'Role ID',form_model_type:'Model Type',form_display_name:'Display Name',
     filter_all:'All States',filter_all_dynasty:'All Dynasties',
     footer_status:'Engine Status',empty_tasks:'No tasks',empty_memorials:'No memorials',
-    empty_agents:'No agents',registered:'Registered',register_selected:'Batch Register',form_representative:'Representative',register:'Register',refresh:'Refresh',no_roles_for_dynasty:'No roles for current dynasty',running:'Running',busy:'Busy',idle:'Idle',
+    empty_agents:'No agents',registered:'Registered',unregister:'Unregister',register_selected:'Batch Register',form_representative:'Representative',register:'Register',refresh:'Refresh',no_roles_for_dynasty:'No roles for current dynasty',running:'Running',busy:'Busy',idle:'Idle',
     tokens:'Tokens',tasks:'Tasks',agents:'Agents',memorials:'Memorials',
     total:'Total',items:'items',create_at:'Created at',transition_to:'To',
     no_transitions:'No transitions available',task_detail:'Task Detail',
@@ -536,6 +539,7 @@ async function loadTasks() {
       ${items.length ? items.map(t => `<div class="kanban-card" onclick="openTransition('${t.task_id}')">
         <div class="kc-title">${t.title}</div>
         <div class="kc-meta">${fmtTime(t.created_at)}</div>
+        <button class="kc-del" onclick="event.stopPropagation();deleteTask('${t.task_id}')" title="delete">&times;</button>
       </div>`).join('') : '<div class="empty-state" style="padding:12px;font-size:11px">-</div>'}
     </div>`;
   }).join('');
@@ -578,6 +582,12 @@ async function doTransition(target) {
   await api('POST','/api/tasks/'+_transitionTaskId+'/transition',{state:target,reason});
   closeModal('modalTransition');
   toast(target);
+  loadTasks(); loadStatus();
+}
+async function deleteTask(taskId) {
+  if (!confirm('确认删除任务？')) return;
+  await api('DELETE','/api/tasks/'+taskId);
+  toast('deleted: '+taskId);
   loadTasks(); loadStatus();
 }
 
@@ -655,7 +665,7 @@ function renderAgentTable(agents) {
   const el = document.getElementById('agentTable');
   if (!agents.length) { el.innerHTML = '<div class="empty-state">'+t('empty_agents')+'</div>'; return; }
   el.innerHTML = `<table class="data-table">
-    <tr><th>ID</th><th>${t('form_role')}</th><th>${t('form_model_type')}</th><th>${t('footer_status')}</th><th>${t('tokens')}</th><th>${t('tasks')}</th></tr>
+    <tr><th>ID</th><th>${t('form_role')}</th><th>${t('form_model_type')}</th><th>${t('footer_status')}</th><th>${t('tokens')}</th><th>${t('tasks')}</th><th style="width:60px"></th></tr>
     ${agents.map(a => `<tr>
       <td style="font-family:monospace;font-size:11px">${a.agent_id}</td>
       <td>${a.display_name||a.role_id}</td>
@@ -663,6 +673,7 @@ function renderAgentTable(agents) {
       <td><span class="badge ${a.is_busy?'badge-red':'badge-green'}">${a.is_busy?t('busy'):t('idle')}</span></td>
       <td>${a.total_tokens_consumed}</td>
       <td>${a.tasks_completed}</td>
+      <td>${a.is_busy?'':`<button class="btn btn-sm btn-danger" onclick="unregisterAgent('${a.agent_id}','${a.display_name||a.role_id}')">${t('unregister')}</button>`}</td>
     </tr>`).join('')}
   </table>`;
 }
@@ -688,6 +699,12 @@ async function registerSingle(btn) {
   };
   await api('POST','/api/agents',data);
   toast(t('register')+': '+data.role_id);
+  loadAgents();
+}
+async function unregisterAgent(agentId, name) {
+  if (!confirm(`确认注销 Agent「${name}」？`)) return;
+  await api('DELETE','/api/agents/'+agentId);
+  toast(t('unregister')+': '+name);
   loadAgents();
 }
 async function batchRegisterAgents() {

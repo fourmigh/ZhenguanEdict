@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from zhenguan_edict.engine.agent_scheduler import AgentScheduler
+from zhenguan_edict.engine.model_router import MODEL_MAP, build_system_prompt, chat
 from zhenguan_edict.engine.routing_engine import RoutingEngine
 from zhenguan_edict.engine.task_state_machine import TaskStateMachine
 from zhenguan_edict.engine.topology_loader import TopologyLoader
@@ -150,16 +151,31 @@ class EngineServer:
         )
         if planner_role is None:
             return content[:MAX_LEN]
-        agent = next(
-            (a for a in self.agents.values() if a.role_id == planner_role.role_id),
-            None
-        )
-        if agent is None:
-            return content[:MAX_LEN]
-        # TODO: 接入真实 LLM 后调用 agent.process(task) 生成标题
-        # msg = await agent.process(task)
-        # return msg.content[:MAX_LEN]
+        prompt = f"为以下朝廷议题提炼一个简洁的标题（{MAX_LEN}字以内），只输出标题本身：\n{content}"
+        messages = [
+            {"role": "system", "content": build_system_prompt(
+                topo.name, planner_role.display_name,
+                planner_role.representative, planner_role.description,
+            )},
+            {"role": "user", "content": prompt},
+        ]
+        result = await chat(MODEL_MAP.get("planner", "ministral-3"), messages)
+        if result:
+            return result.strip()[:MAX_LEN]
+        logger.info("Ollama title gen returned empty, fallback to truncation")
         return content[:MAX_LEN]
+
+    def remove_task(self, task_id: str) -> Optional[TaskModel]:
+        task = self.tasks.pop(task_id, None)
+        if task is None:
+            return None
+        # remove associated memorials
+        self.memorials = {
+            k: v for k, v in self.memorials.items() if v.task_id != task_id
+        }
+        logger.info("Task removed: %s", task_id)
+        self._broadcast_sse({"type": "task_removed", "task_id": task_id})
+        return task
 
     def get_task(self, task_id: str) -> Optional[TaskModel]:
         return self.tasks.get(task_id)
@@ -260,6 +276,13 @@ class EngineServer:
             agent = self.register_agent(role_id, model_type, display_name)
             agents.append(agent)
         return agents
+
+    def unregister_agent(self, agent_id: str) -> Optional[AgentModel]:
+        agent = self.agents.pop(agent_id, None)
+        if agent:
+            logger.info("Agent unregistered: %s (role=%s)", agent_id, agent.role_id)
+            self._broadcast_sse({"type": "agent_unregistered", "agent_id": agent_id})
+        return agent
 
     def list_agents(self) -> List[AgentModel]:
         return list(self.agents.values())
@@ -545,6 +568,24 @@ async def create_task(req: CreateTaskRequest):
     engine = _get_engine()
     if not req.content.strip():
         raise HTTPException(400, "content is required")
+    topo = engine.active_topology
+    if topo is None:
+        raise HTTPException(503, "No dynasty loaded")
+    planner_role = next(
+        (r for r in topo.roles.values() if r.model_type == "planner"),
+        None
+    )
+    if planner_role is None:
+        raise HTTPException(503, "Current dynasty has no planner role defined")
+    has_agent = any(
+        a.role_id == planner_role.role_id for a in engine.agents.values()
+    )
+    if not has_agent:
+        raise HTTPException(
+            400,
+            f"No agent registered for planner role '{planner_role.display_name}'. "
+            f"Register an agent before creating tasks.",
+        )
     task = await engine.create_task(req.content)
     return {
         "task_id": task.task_id,
@@ -589,6 +630,15 @@ async def transition_task(task_id: str, req: TransitionRequest):
     }
 
 
+@app.delete("/api/tasks/{task_id}")
+async def delete_task(task_id: str):
+    engine = _get_engine()
+    task = engine.remove_task(task_id)
+    if task is None:
+        raise HTTPException(404, f"Task not found: {task_id}")
+    return {"status": "deleted", "task_id": task_id}
+
+
 # ── Agent 管理 ──
 
 @app.get("/api/agents")
@@ -621,6 +671,18 @@ async def register_agent(req: RegisterAgentRequest):
         "model_type": agent.model_type,
         "display_name": agent.display_name,
     }
+
+
+@app.delete("/api/agents/{agent_id}")
+async def unregister_agent(agent_id: str):
+    engine = _get_engine()
+    agent = engine.agents.get(agent_id)
+    if agent is None:
+        raise HTTPException(404, f"Agent not found: {agent_id}")
+    if agent.is_busy:
+        raise HTTPException(409, f"Agent {agent_id} is busy, cannot unregister")
+    removed = engine.unregister_agent(agent_id)
+    return {"status": "unregistered", "agent_id": agent_id}
 
 
 @app.put("/api/agents/batch")
