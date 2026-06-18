@@ -7,11 +7,11 @@ logger = logging.getLogger(__name__)
 OLLAMA_URL = "http://127.0.0.1:11434"
 
 MODEL_MAP: Dict[str, str] = {
-    "planner": "qwen2.5:0.5b",
-    "coder": "qwen2.5:0.5b",
-    "reviewer": "qwen2.5:0.5b",
-    "documenter": "qwen2.5:0.5b",
-    "lite": "qwen2.5:0.5b",
+    "planner": "qwen2.5:1.5b",
+    "coder": "qwen2.5:1.5b",
+    "reviewer": "qwen2.5:1.5b",
+    "documenter": "qwen2.5:1.5b",
+    "lite": "qwen2.5:1.5b",
 }
 
 def build_system_prompt(topo_name: str, role_display_name: str, representative: str, description: str) -> str:

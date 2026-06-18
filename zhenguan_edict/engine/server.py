@@ -249,6 +249,13 @@ class EngineServer:
     def get_memorial(self, memorial_id: str) -> Optional[MemorialModel]:
         return self.memorials.get(memorial_id)
 
+    def remove_memorial(self, memorial_id: str) -> Optional[MemorialModel]:
+        memorial = self.memorials.pop(memorial_id, None)
+        if memorial:
+            logger.info("Memorial removed: %s", memorial_id)
+            self._broadcast_sse({"type": "memorial_removed", "memorial_id": memorial_id})
+        return memorial
+
     def list_memorials(self, dynasty: Optional[str] = None) -> List[MemorialModel]:
         result = list(self.memorials.values())
         if dynasty:
@@ -345,8 +352,29 @@ class EngineServer:
                     continue
                 agent.is_busy = True
                 agent.current_task_id = task.task_id
-                # TODO: 接入真实 LLM 后 await agent.process(task)
-                await asyncio.sleep(0)  # yield control
+                if "_llm_processed" not in task.metadata:
+                    role_def = topo.roles.get(agent.role_id)
+                    if role_def:
+                        messages = [
+                            {"role": "system", "content": build_system_prompt(
+                                topo.name, role_def.display_name,
+                                role_def.representative, role_def.description,
+                            )},
+                            {"role": "user", "content": task.content},
+                        ]
+                        result = await chat(
+                            MODEL_MAP.get(role_def.model_type, "lite"),
+                            messages,
+                        )
+                        if result:
+                            task.metadata["result"] = result
+                            task.metadata["_llm_processed"] = True
+                            self._append_entry(
+                                task.task_id, "llm_response",
+                                result[:200],
+                                f"by {agent.display_name}",
+                            )
+                            agent.total_tokens_consumed += len(result)
                 allowed = self.state_machine.allowed_transitions(task.state)
                 if allowed:
                     try:
@@ -558,6 +586,7 @@ async def list_tasks(
             "created_at": t.created_at.isoformat(),
             "updated_at": t.updated_at.isoformat(),
             "completed_at": t.completed_at.isoformat() if t.completed_at else None,
+            "metadata": t.metadata,
         }
         for t in tasks
     ]
@@ -707,12 +736,15 @@ async def batch_register_agents(req: BatchAgentRequest):
 async def list_memorials(dynasty: Optional[str] = Query(None)):
     engine = _get_engine()
     memorials = engine.list_memorials(dynasty)
+    # build dynasty name -> display_name map
+    topo_names = {t.name: t.display_name for t in engine.topology_loader.list_available_topologies()}
     return [
         {
             "memorial_id": m.memorial_id,
             "task_id": m.task_id,
             "task_title": m.task_title,
             "dynasty": m.dynasty,
+            "dynasty_display_name": topo_names.get(m.dynasty, m.dynasty),
             "created_at": m.created_at.isoformat(),
             "completed_at": m.completed_at.isoformat() if m.completed_at else None,
             "entries_count": len(m.entries),
@@ -728,11 +760,13 @@ async def get_memorial(memorial_id: str):
     memorial = engine.get_memorial(memorial_id)
     if memorial is None:
         raise HTTPException(404, f"Memorial not found: {memorial_id}")
+    topo_names = {t.name: t.display_name for t in engine.topology_loader.list_available_topologies()}
     return {
         "memorial_id": memorial.memorial_id,
         "task_id": memorial.task_id,
         "task_title": memorial.task_title,
         "dynasty": memorial.dynasty,
+        "dynasty_display_name": topo_names.get(memorial.dynasty, memorial.dynasty),
         "created_at": memorial.created_at.isoformat(),
         "completed_at": memorial.completed_at.isoformat() if memorial.completed_at else None,
         "entries": [
@@ -751,6 +785,15 @@ async def get_memorial(memorial_id: str):
         ],
         "total_tokens": memorial.total_token_usage,
     }
+
+
+@app.delete("/api/memorials/{memorial_id}")
+async def delete_memorial(memorial_id: str):
+    engine = _get_engine()
+    memorial = engine.remove_memorial(memorial_id)
+    if memorial is None:
+        raise HTTPException(404, f"Memorial not found: {memorial_id}")
+    return {"status": "deleted", "memorial_id": memorial_id}
 
 
 # ── SSE 事件推送 ──

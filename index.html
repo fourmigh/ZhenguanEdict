@@ -112,9 +112,10 @@ a { color: var(--accent); text-decoration: none; }
 .kanban-card:hover { border-color: var(--accent-dim); }
 .kanban-card .kc-title { font-weight: 500; margin-bottom: 2px; }
 .kanban-card .kc-meta { font-size: 10px; color: var(--text-muted); }
-.kanban-card .kc-del { position: absolute; top: 1px; right: 3px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 3px; opacity: 0; transition: opacity .15s; }
-.kanban-card:hover .kc-del { opacity: 1; }
-.kanban-card .kc-del:hover { color: var(--danger); }
+.kanban-card .kc-preview { font-size: 10px; color: var(--accent-dim); margin-top: 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-del-btn { position: absolute; top: 2px; right: 4px; opacity: 0; transition: opacity .15s; z-index: 1; white-space: nowrap; }
+.kanban-card:hover .card-del-btn,
+div[style*="position:relative"]:hover .card-del-btn { opacity: 1; }
 /* Modal */
 .modal-overlay {
   display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
@@ -138,11 +139,13 @@ a { color: var(--accent); text-decoration: none; }
 .btn {
   padding: 6px 16px; border-radius: var(--radius); border: 1px solid var(--border);
   background: var(--bg3); color: var(--text); cursor: pointer; font: 12px var(--font);
-  transition: all .2s; font-family: var(--font);
+  transition: all .2s; font-family: var(--font); white-space: nowrap;
 }
 .btn:hover { border-color: var(--accent-dim); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 .btn-primary { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent); }
+.btn-primary:disabled { background: var(--accent-dim); opacity: 0.5; }
 .btn-sm { padding: 3px 10px; font-size: 11px; }
 .btn-danger { border-color: var(--danger); color: var(--danger); }
 /* Table */
@@ -301,7 +304,7 @@ a { color: var(--accent); text-decoration: none; }
     <textarea id="taskContent" placeholder="" style="min-height:120px"></textarea>
     <div class="btn-row">
       <button class="btn" onclick="closeModal('modalTask')" data-lang="cancel">取消</button>
-      <button class="btn btn-primary" onclick="submitCreateTask()" data-lang="confirm">确认</button>
+      <button class="btn btn-primary" id="btnCreateTask" onclick="submitCreateTask()" data-lang="confirm">确认</button>
     </div>
   </div>
 </div>
@@ -311,6 +314,8 @@ a { color: var(--accent); text-decoration: none; }
     <button class="modal-close" onclick="closeModal('modalTransition')">&times;</button>
     <div class="modal-title" data-lang="modal_transition">推进状态</div>
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px" id="transitionTaskInfo"></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;padding:8px;background:var(--bg3);border-radius:4px;white-space:pre-wrap;word-break:break-all" id="transitionTaskContent"></div>
+    <div style="font-size:12px;color:var(--text);margin-bottom:12px;padding:10px;background:var(--bg2);border:1px solid var(--accent-dim);border-radius:4px;white-space:pre-wrap;word-break:break-all" id="transitionTaskResult"></div>
     <label data-lang="form_target_state">目标状态</label>
     <div class="transition-list" id="transitionList"></div>
     <label data-lang="form_reason">原因</label>
@@ -347,7 +352,7 @@ const STR = {
     form_model_type:'模型类型',form_display_name:'显示名称',
     filter_all:'全部状态',filter_all_dynasty:'全部朝代',
     footer_status:'引擎状态',empty_tasks:'暂无任务',empty_memorials:'暂无奏折',
-    empty_agents:'暂无 Agent',registered:'已注册',unregister:'注销',register_selected:'批量注册',form_representative:'代表人物',register:'注册',refresh:'刷新',no_roles_for_dynasty:'当前朝代无官员角色',running:'运行中',busy:'忙碌',idle:'空闲',
+    empty_agents:'暂无 Agent',registered:'已注册',unregister:'注销',register_selected:'批量注册',form_representative:'代表人物',register:'注册',refresh:'刷新',no_roles_for_dynasty:'当前朝代无官员角色',running:'运行中',busy:'忙碌',idle:'空闲',delete:'删除',
     tokens:'Token',tasks:'任务',agents:'Agent',memorials:'奏折',
     total:'共',items:'项',create_at:'创建于',transition_to:'转至',
     no_transitions:'无可流转状态',task_detail:'任务详情',
@@ -366,7 +371,7 @@ const STR = {
     form_role:'Role ID',form_model_type:'Model Type',form_display_name:'Display Name',
     filter_all:'All States',filter_all_dynasty:'All Dynasties',
     footer_status:'Engine Status',empty_tasks:'No tasks',empty_memorials:'No memorials',
-    empty_agents:'No agents',registered:'Registered',unregister:'Unregister',register_selected:'Batch Register',form_representative:'Representative',register:'Register',refresh:'Refresh',no_roles_for_dynasty:'No roles for current dynasty',running:'Running',busy:'Busy',idle:'Idle',
+    empty_agents:'No agents',registered:'Registered',unregister:'Unregister',register_selected:'Batch Register',form_representative:'Representative',register:'Register',refresh:'Refresh',no_roles_for_dynasty:'No roles for current dynasty',running:'Running',busy:'Busy',idle:'Idle',delete:'Del',
     tokens:'Tokens',tasks:'Tasks',agents:'Agents',memorials:'Memorials',
     total:'Total',items:'items',create_at:'Created at',transition_to:'To',
     no_transitions:'No transitions available',task_detail:'Task Detail',
@@ -536,10 +541,11 @@ async function loadTasks() {
     const items = groups[st] || [];
     return `<div class="kanban-col">
       <div class="kanban-col-header">${st} (${items.length})</div>
-      ${items.length ? items.map(t => `<div class="kanban-card" onclick="openTransition('${t.task_id}')">
-        <div class="kc-title">${t.title}</div>
-        <div class="kc-meta">${fmtTime(t.created_at)}</div>
-        <button class="kc-del" onclick="event.stopPropagation();deleteTask('${t.task_id}')" title="delete">&times;</button>
+      ${items.length ? items.map(task => `<div class="kanban-card" onclick="openTransition('${task.task_id}')">
+        <div class="kc-title">${task.title}</div>
+        <div class="kc-meta">${fmtTime(task.created_at)}</div>
+        ${task.metadata&&task.metadata.result?'<div class="kc-preview">'+task.metadata.result.slice(0,60)+(task.metadata.result.length>60?'...':'')+'</div>':''}
+        <button class="btn btn-sm btn-danger card-del-btn" onclick="event.stopPropagation();deleteTask('${task.task_id}')">${t('delete')}</button>
       </div>`).join('') : '<div class="empty-state" style="padding:12px;font-size:11px">-</div>'}
     </div>`;
   }).join('');
@@ -553,11 +559,20 @@ function openCreateTask() {
 async function submitCreateTask() {
   const content = document.getElementById('taskContent').value.trim();
   if (!content) return;
-  const r = await api('POST','/api/tasks',{content});
-  closeModal('modalTask');
-  document.getElementById('taskContent').value = '';
-  toast(t('toast_created') + ': ' + r.title);
-  loadTasks(); loadStatus();
+  const btn = document.getElementById('btnCreateTask');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  try {
+    const r = await api('POST','/api/tasks',{content});
+    closeModal('modalTask');
+    document.getElementById('taskContent').value = '';
+    toast(t('toast_created') + ': ' + r.title);
+    loadTasks(); loadStatus();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
 }
 
 let _transitionTaskId = '';
@@ -567,6 +582,14 @@ async function openTransition(taskId) {
   const cur = await api('GET','/api/dynasties/current');
   const trans = cur.state_machine.transitions.filter(t => t.from === task.state);
   document.getElementById('transitionTaskInfo').textContent = task.title + ' [' + task.state + ']';
+  document.getElementById('transitionTaskContent').textContent = task.content;
+  const resultEl = document.getElementById('transitionTaskResult');
+  if (task.metadata && task.metadata.result) {
+    resultEl.textContent = task.metadata.result;
+    resultEl.style.display = 'block';
+  } else {
+    resultEl.style.display = 'none';
+  }
   document.getElementById('transitionReason').value = '';
   const list = document.getElementById('transitionList');
   if (trans.length) {
@@ -599,13 +622,16 @@ async function loadMemorials() {
   const container = document.getElementById('memorialList');
   if (!data.length) { container.innerHTML = '<div class="empty-state">'+t('empty_memorials')+'</div>'; return; }
   container.innerHTML = data.map(m => `
-    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:pointer" onclick="openMemorial('${m.memorial_id}')">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:500;font-size:13px">${m.task_title}</span>
-        <span style="font-size:11px;color:var(--text-muted)">${m.dynasty}</span>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:pointer" onclick="openMemorial('${m.memorial_id}')">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500;font-size:13px">${m.task_title}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
+          ${fmtTime(m.created_at)} · ${t('tokens')}: ${Object.values(m.total_tokens||{}).reduce((a,b)=>a+b,0)} · ${m.entries_count} ${t('items')}
+        </div>
       </div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
-        ${fmtTime(m.created_at)} · ${t('tokens')}: ${Object.values(m.total_tokens||{}).reduce((a,b)=>a+b,0)} · ${m.entries_count} ${t('items')}
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:11px;color:var(--text-muted)">${m.dynasty_display_name||m.dynasty}</span>
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteMemorial('${m.memorial_id}')">${t('delete')}</button>
       </div>
     </div>`).join('');
 }
@@ -615,7 +641,7 @@ async function openMemorial(id) {
   const entries = m.entries || [];
   document.getElementById('memorialDetail').innerHTML = `
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">
-      ${m.task_title} · ${m.dynasty} · ${fmtTime(m.created_at)}
+      ${m.task_title} · ${m.dynasty_display_name||m.dynasty} · ${fmtTime(m.created_at)}
     </div>
     ${entries.length ? '<div class="timeline">'+entries.map(e => `
       <div class="tl-item">
@@ -627,8 +653,12 @@ async function openMemorial(id) {
     <div style="font-size:11px;color:var(--text-muted);margin-top:8px">${t('tokens')}: ${Object.values(m.total_tokens||{}).reduce((a,b)=>a+b,0)}</div>`;
   openModal('modalMemorial');
 }
-
-// ============ AGENTS ============
+async function deleteMemorial(id) {
+  if (!confirm('确认删除奏折？')) return;
+  await api('DELETE','/api/memorials/'+id);
+  toast('deleted: '+id);
+  loadMemorials(); loadStatus();
+}
 async function loadAgents() {
   const cur = await api('GET','/api/dynasties/current');
   const roles = cur.roles || [];
@@ -658,23 +688,29 @@ async function loadAgents() {
     btn.disabled = n===0;
   }
   document.getElementById('agentCount').textContent = t('registered')+': '+agents.length;
-  renderAgentTable(agents);
+  renderAgentTable(agents, roles);
   loadStatus();
 }
-function renderAgentTable(agents) {
+function renderAgentTable(agents, roles) {
   const el = document.getElementById('agentTable');
   if (!agents.length) { el.innerHTML = '<div class="empty-state">'+t('empty_agents')+'</div>'; return; }
+  const roleMap = {};
+  (roles||[]).forEach(r => { roleMap[r.role_id] = r; });
   el.innerHTML = `<table class="data-table">
-    <tr><th>ID</th><th>${t('form_role')}</th><th>${t('form_model_type')}</th><th>${t('footer_status')}</th><th>${t('tokens')}</th><th>${t('tasks')}</th><th style="width:60px"></th></tr>
-    ${agents.map(a => `<tr>
+    <tr><th>ID</th><th>${t('form_role')}</th><th>${t('form_representative')}</th><th>${t('form_model_type')}</th><th>${t('footer_status')}</th><th>${t('tokens')}</th><th>${t('tasks')}</th><th style="width:60px"></th></tr>
+    ${agents.map(a => {
+      const role = roleMap[a.role_id];
+      return `<tr>
       <td style="font-family:monospace;font-size:11px">${a.agent_id}</td>
-      <td>${a.display_name||a.role_id}</td>
+      <td>${role ? role.display_name : a.role_id}</td>
+      <td style="color:var(--text-dim);font-size:11px">${a.display_name||'-'}</td>
       <td><span class="badge badge-gray">${a.model_type}</span></td>
       <td><span class="badge ${a.is_busy?'badge-red':'badge-green'}">${a.is_busy?t('busy'):t('idle')}</span></td>
       <td>${a.total_tokens_consumed}</td>
       <td>${a.tasks_completed}</td>
       <td>${a.is_busy?'':`<button class="btn btn-sm btn-danger" onclick="unregisterAgent('${a.agent_id}','${a.display_name||a.role_id}')">${t('unregister')}</button>`}</td>
-    </tr>`).join('')}
+    </tr>`;
+    }).join('')}
   </table>`;
 }
 function getFormData() {
